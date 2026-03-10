@@ -1,4 +1,4 @@
-package com.sourashis.quizapp.entities;
+package com.sourashis.quizapp.models;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,7 +12,7 @@ public class Question {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     private String questionTitle;
     private String option1;
     private String option2;

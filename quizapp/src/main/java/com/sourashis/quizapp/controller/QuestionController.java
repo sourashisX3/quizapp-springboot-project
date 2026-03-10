@@ -1,6 +1,6 @@
 package com.sourashis.quizapp.controller;
 
-import com.sourashis.quizapp.entities.Question;
+import com.sourashis.quizapp.models.Question;
 import com.sourashis.quizapp.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +31,7 @@ public class QuestionController {
     }
 
     @DeleteMapping("delete/{id}")
-    public ResponseEntity<String> deleteQuestion(@PathVariable("id") int id) {
+    public ResponseEntity<String> deleteQuestion(@PathVariable("id") Integer id) {
         return questionService.deleteQuestionById(id);
     }
 }

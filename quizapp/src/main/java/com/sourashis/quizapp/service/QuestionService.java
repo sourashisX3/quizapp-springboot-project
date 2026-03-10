@@ -1,7 +1,7 @@
 package com.sourashis.quizapp.service;
 
 import com.sourashis.quizapp.dao.QuestionDao;
-import com.sourashis.quizapp.entities.Question;
+import com.sourashis.quizapp.models.Question;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +50,7 @@ public class QuestionService {
 
 
     // -- Delete question --
-    public ResponseEntity<String> deleteQuestionById(int id) {
+    public ResponseEntity<String> deleteQuestionById(Integer id) {
         try {
             questionDao.deleteById(id);
             return new ResponseEntity<>("Question deleted successfully!", HttpStatus.OK);
