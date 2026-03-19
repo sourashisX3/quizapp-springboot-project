@@ -1,4 +1,4 @@
-package com.sourashis.quizapp.models;
+package com.sourashis.quizapp.modules.question.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,3 +22,4 @@ public class Question {
     private String difficultyLevel;
     private String category;
 }
+
