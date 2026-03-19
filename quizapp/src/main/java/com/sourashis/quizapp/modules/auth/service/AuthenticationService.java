@@ -45,6 +45,10 @@ public class AuthenticationService {
         User user = AuthenticationMapper.toUserEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(asAdmin ? Role.ROLE_ADMIN : Role.ROLE_USER);
+        user.setEmail(request.getEmail());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setAddress(request.getAddress());
+        // TODO: confirm password
 
         repository.save(user);
 

@@ -1,14 +1,13 @@
 package com.sourashis.quizapp.modules.auth.controller;
 
 import com.sourashis.quizapp.core.response.ApiResponseWrapper;
-import com.sourashis.quizapp.modules.auth.dto.AuthenticationRequest;
-import com.sourashis.quizapp.modules.auth.dto.AuthenticationResponse;
-import com.sourashis.quizapp.modules.auth.dto.RefreshTokenRequest;
+import com.sourashis.quizapp.modules.auth.dto.*;
 import com.sourashis.quizapp.modules.auth.service.AuthenticationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,7 +23,7 @@ public class AuthenticationController {
      */
     @PostMapping("/register")
     public ResponseEntity<ApiResponseWrapper<AuthenticationResponse>> register(
-            @RequestBody @Valid AuthenticationRequest request,
+            @RequestBody @Validated(OnRegister.class) AuthenticationRequest request,
             @RequestParam(value = "admin", defaultValue = "false") boolean admin
     ) {
         return ApiResponseWrapper.created(authenticationService.register(request, admin), "Registration successful!");
@@ -35,7 +34,9 @@ public class AuthenticationController {
      * User login
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponseWrapper<AuthenticationResponse>> login(@RequestBody @Valid AuthenticationRequest request) {
+    public ResponseEntity<ApiResponseWrapper<AuthenticationResponse>> login(
+            @RequestBody @Validated(OnLogin.class) AuthenticationRequest request
+    ) {
         return ApiResponseWrapper.success(authenticationService.login(request), "Login successful!");
     }
 
