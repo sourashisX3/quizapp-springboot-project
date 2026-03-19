@@ -1,10 +1,16 @@
 package com.sourashis.quizapp.core.exception;
 
 import com.sourashis.quizapp.core.response.ApiResponseWrapper;
+import com.sourashis.quizapp.modules.auth.exception.InvalidRefreshTokenException;
+import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -33,6 +39,44 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         log.error("Validation failed: {}", errors);
         return ApiResponseWrapper.error(HttpStatus.BAD_REQUEST, "Validation failed: " + errors);
+    }
+
+    // ── Handles authentication exceptions ──────────────────────────────────────
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponseWrapper<Void>> handleBadCredentialsException(BadCredentialsException ex) {
+        log.error("Authentication failed: Invalid credentials");
+        return ApiResponseWrapper.error(HttpStatus.UNAUTHORIZED, "Invalid username or password!");
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiResponseWrapper<Void>> handleDisabledException(DisabledException ex) {
+        log.error("Account disabled: {}", ex.getMessage());
+        return ApiResponseWrapper.error(HttpStatus.UNAUTHORIZED, "User account is disabled!");
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ApiResponseWrapper<Void>> handleLockedException(LockedException ex) {
+        log.error("Account locked: {}", ex.getMessage());
+        return ApiResponseWrapper.error(HttpStatus.UNAUTHORIZED, "User account is locked!");
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponseWrapper<Void>> handleAuthenticationException(AuthenticationException ex) {
+        log.error("Authentication failed: {}", ex.getMessage());
+        return ApiResponseWrapper.error(HttpStatus.UNAUTHORIZED, "Authentication failed: " + ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ApiResponseWrapper<Void>> handleInvalidRefreshTokenException(InvalidRefreshTokenException ex) {
+        log.error("Invalid refresh token: {}", ex.getMessage());
+        return ApiResponseWrapper.error(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ApiResponseWrapper<Void>> handleJwtException(JwtException ex) {
+        log.error("JWT exception: {}", ex.getMessage());
+        return ApiResponseWrapper.error(HttpStatus.UNAUTHORIZED, "Invalid or expired token!");
     }
 
     // ── Catch-all fallback ────────────────────────────────────────────────────

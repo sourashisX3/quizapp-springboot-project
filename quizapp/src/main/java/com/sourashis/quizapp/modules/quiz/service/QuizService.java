@@ -38,6 +38,8 @@ public class QuizService {
         List<Question> questions = questionRepository.findRandomQuestionsByCategory(
                 request.getCategory(), request.getNumQuestions());
 
+        // TODO: check if the category exists
+
         Quiz quiz = new Quiz();
         quiz.setTitle(request.getTitle());
         quiz.setQuestions(questions);

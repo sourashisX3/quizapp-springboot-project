@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,8 +26,10 @@ public class QuestionController {
     /**
      * GET /question/all
      * Returns all questions — no meta in response.
+     * Access: Any authenticated user (ADMIN or USER)
      */
     @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponseWrapper<List<QuestionResponse>>> getAllQuestions() {
         List<QuestionResponse> questions = questionService.getAllQuestions();
         return ApiResponseWrapper.success(questions, "Questions fetched successfully!");
@@ -35,8 +38,10 @@ public class QuestionController {
     /**
      * GET /question/all/paged?page=0&size=10&sortBy=id
      * Returns paginated questions — meta included in response.
+     * Access: Any authenticated user (ADMIN or USER)
      */
     @GetMapping("/all/paged")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponseWrapper<List<QuestionResponse>>> getAllQuestionsPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -48,8 +53,10 @@ public class QuestionController {
     /**
      * GET /question/category/{categoryName}
      * Returns questions filtered by category — no meta.
+     * Access: Any authenticated user (ADMIN or USER)
      */
     @GetMapping("/category/{categoryName}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponseWrapper<List<QuestionResponse>>> getQuestionsByCategory(
             @PathVariable String categoryName) {
         List<QuestionResponse> questions = questionService.getQuestionsByCategory(categoryName);
@@ -59,8 +66,10 @@ public class QuestionController {
     /**
      * POST /question/add
      * Adds a new question.
+     * Access: ADMIN only
      */
     @PostMapping("/add")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponseWrapper<QuestionResponse>> addQuestion(
             @Valid @RequestBody QuestionRequest request) {
         QuestionResponse response = questionService.addQuestion(request);
@@ -70,8 +79,10 @@ public class QuestionController {
     /**
      * DELETE /question/delete/{id}
      * Deletes a question by id.
+     * Access: ADMIN only
      */
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponseWrapper<QuestionResponse>> deleteQuestion(@PathVariable Integer id) {
         QuestionResponse response = questionService.deleteQuestionById(id);
         return ApiResponseWrapper.success(response, "Question deleted successfully!");

@@ -12,7 +12,7 @@ public class QuizRequest {
     private String category;
 
     @NotNull(message = "Number of questions is required")
-    @Min(value = 1, message = "At least 1 question is required")
+    @Min(value = 5, message = "At least 5 question is required")
     private Integer numQuestions;
 
     @NotBlank(message = "Title is required")

@@ -9,6 +9,7 @@ import com.sourashis.quizapp.modules.quiz.service.QuizService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,8 +24,10 @@ public class QuizController {
     /**
      * POST /quiz/create
      * Creates a new quiz with random questions.
+     * Access: ADMIN only
      */
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponseWrapper<QuizResponse>> createQuiz(
             @Valid @RequestBody QuizRequest request) {
         QuizResponse response = quizService.createQuiz(request);
@@ -34,8 +37,10 @@ public class QuizController {
     /**
      * GET /quiz/{id}/questions
      * Returns the questions for a given quiz — rightAnswer excluded.
+     * Access: Any authenticated user (ADMIN or USER)
      */
     @GetMapping("/{id}/questions")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponseWrapper<QuizResponse>> getQuizQuestions(
             @PathVariable Integer id) {
         QuizResponse response = quizService.getQuizQuestions(id);
@@ -45,8 +50,10 @@ public class QuizController {
     /**
      * POST /quiz/{id}/submit
      * Submits answers and returns the score breakdown.
+     * Access: Any authenticated user (ADMIN or USER)
      */
     @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponseWrapper<QuizScoreResponse>> submitQuiz(
             @PathVariable Integer id,
             @Valid @RequestBody List<SubmitAnswerRequest> responses) {
