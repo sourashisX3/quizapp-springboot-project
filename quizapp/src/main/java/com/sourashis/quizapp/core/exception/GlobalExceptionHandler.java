@@ -7,10 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -41,12 +43,33 @@ public class GlobalExceptionHandler {
         return ApiResponseWrapper.error(HttpStatus.BAD_REQUEST, "Validation failed: " + errors);
     }
 
+    // ── Handles authorization exceptions ──────────────────────────────────────
+
+    /**
+     * Handles @PreAuthorize access denied failures.
+     * This is thrown when a user doesn't have the required role for an endpoint.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponseWrapper<Void>> handleAccessDeniedException(AccessDeniedException ex) {
+        log.error("Access denied: {}", ex.getMessage());
+        return ApiResponseWrapper.error(
+                HttpStatus.FORBIDDEN,
+                "Access Denied - You do not have the required permissions to access this resource. ADMIN role required."
+        );
+    }
+
     // ── Handles authentication exceptions ──────────────────────────────────────
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponseWrapper<Void>> handleBadCredentialsException(BadCredentialsException ex) {
         log.error("Authentication failed: Invalid credentials");
         return ApiResponseWrapper.error(HttpStatus.UNAUTHORIZED, "Invalid username or password!");
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiResponseWrapper<Void>> handleUsernameNotFoundException(UsernameNotFoundException ex) {
+        log.error("User not found: {}", ex.getMessage());
+        return ApiResponseWrapper.error(HttpStatus.UNAUTHORIZED, "User not found: " + ex.getMessage());
     }
 
     @ExceptionHandler(DisabledException.class)
