@@ -1,49 +1,49 @@
 # QuizApp
 
-A Spring Boot REST backend for managing multiple-choice quizzes and questions.
+A Spring Boot REST backend for creating and running multiple-choice quizzes.
 
-This README documents the currently implemented API endpoints, request/response shapes (DTOs), authentication and error formats, and example requests you can use when testing the application locally.
+This repository contains the backend for a quiz application providing:
+- User authentication (register, login, refresh, logout)
+- CRUD operations for Questions and Categories (admin-only where applicable)
+- Creation of quizzes from categories and submission/scoring of answers
+- Consistent API response wrapper and pagination support
 
----
-
-High-level plan
-
-- Collect all controllers and DTOs implemented in the codebase and list endpoints with HTTP methods, request/response shapes and sample JSON
-- Include authentication information and example Authorization header
-- Describe the ApiResponseWrapper and PaginationMeta shapes used across responses
-- Add run/test instructions for Windows PowerShell
-
-Checklist
-
-- [x] Document Auth endpoints and DTOs
-- [x] Document Question endpoints and DTOs
-- [x] Document Quiz & Category endpoints and DTOs
-- [x] Show ApiResponseWrapper and PaginationMeta shapes
-- [x] Add example requests and responses
-- [x] Provide run instructions
-
----
+This README documents how to run the application locally, the high-level API structure, authentication, response shapes, and example requests you can use when testing.
 
 Table of contents
 
 - Project overview
-- Run & test locally
+- Features
+- Tech stack
+- Important modules / controllers
+- Run & test locally (Windows PowerShell)
 - Authentication
-- API endpoints (Auth, Questions, Quiz & Categories)
-- Response wrapper and error format
-- Examples (curl / JSON)
-
----
+- API summary (Auth, Questions, Quiz & Categories)
+- Response wrapper & error format
+- Example requests (curl / PowerShell)
+- Contributing
 
 Project overview
 
-This project exposes a REST API for:
-- User authentication (register/login/refresh/logout)
-- CRUD operations for Questions
-- Creating quizzes with random questions for a category, submitting answers and scoring
-- Managing Categories used to group questions
+The backend is implemented with Spring Boot and exposes REST endpoints to manage quizzes and questions and to let users take quizzes. It intentionally hides correct answers in read endpoints (so clients cannot see the right answers when fetching quiz questions).
 
-Implemented modules (relevant controllers)
+Features
+
+- JWT-based authentication with access and refresh tokens
+- Role-based access: ADMIN and USER
+- CRUD operations for questions and categories (ADMIN only where appropriate)
+- Create quizzes by selecting random questions from a category
+- Submit quiz answers and receive a score breakdown
+- Paginated endpoints with pagination metadata
+
+Tech stack
+
+- Java 17+ (as configured in the project)
+- Spring Boot (Web, Security, Data JPA)
+- Maven (wrapper included: `mvnw`, `mvnw.cmd`)
+
+Important modules / controllers
+
 - `com.sourashis.quizapp.modules.auth.controller.AuthenticationController` — /auth
 - `com.sourashis.quizapp.modules.question.controller.QuestionController` — /question
 - `com.sourashis.quizapp.modules.quiz.controller.QuizController` — /quiz
@@ -53,293 +53,99 @@ Run & test locally (Windows PowerShell)
 From the project root (where `mvnw.cmd` is located):
 
 ```powershell
-# Run using Maven wrapper
+# Run with the Maven wrapper
 .\mvnw.cmd spring-boot:run
 
-# Or build and run jar
+# Or build and run the jar
 .\mvnw.cmd clean package
-java -jar target\<your-artifact-name>.jar
+java -jar target\*.jar
 ```
 
 Default server port: 8080 (unless overridden in `src/main/resources/application.properties`).
 
 Authentication
 
-- The application uses JWT-based tokens (see `AuthenticationResponse` which contains `authToken` and `refreshToken`).
-- To call protected endpoints include the header:
+- The API uses JWT-based tokens. Successful authentication returns an access token (`authToken`) and a `refreshToken`.
+- To access protected endpoints, include the header:
 
   Authorization: Bearer <authToken>
 
-- Role-based access is used with `@PreAuthorize`:
-  - ADMIN-only endpoints: category and question management, quiz creation
-  - ADMIN or USER: reading questions, taking/submitting quizzes
+- Role-based access is enforced using Spring Security annotations. Typical restrictions:
+  - ADMIN: create/edit/delete categories and questions, create quizzes
+  - ADMIN or USER: fetch questions, take quizzes, submit answers
 
-API endpoints
+API summary
 
-All responses are wrapped in an `ApiResponseWrapper<T>` (see "Response wrapper and error format" section).
+All responses are wrapped in an `ApiResponseWrapper<T>` which contains a status code, message, optional payload in `response`, and optional pagination metadata in `meta` for paged endpoints.
 
-1) Auth
+1) Auth (base path: `/auth`)
 
-Base path: /auth
+- POST `/auth/register?admin=false` — Register a new user. `admin=true` may create an admin user depending on configuration.
+  - Request body: AuthenticationRequest
+    - username, password, email, phoneNumber, address
+  - Response: ApiResponseWrapper<AuthenticationResponse> (201 Created)
 
-- POST /auth/register?admin=false
-  - Description: Register a new user. Set `admin=true` query param to create an admin user (protected usage; this code accepts the param but calling without appropriate privileges will vary by configuration).
-  - Request Body: AuthenticationRequest
-    {
-      "username": "string",
-      "password": "string",
-      "email": "string",
-      "phoneNumber": "string",
-      "address": "string"
-    }
-  - Response (201 Created): ApiResponseWrapper<AuthenticationResponse>
+- POST `/auth/login` — Login with username and password.
+  - Request body: { username, password }
+  - Response: ApiResponseWrapper<AuthenticationResponse>
 
-- POST /auth/login
-  - Description: Login with username and password
-  - Request Body: AuthenticationRequest (login fields only)
-    {
-      "username": "string",
-      "password": "string"
-    }
-  - Response (200 OK): ApiResponseWrapper<AuthenticationResponse>
+- POST `/auth/refresh` — Refresh access token using a refresh token.
+  - Request body: { refreshToken }
+  - Response: ApiResponseWrapper<AuthenticationResponse>
 
-- POST /auth/refresh
-  - Description: Refresh access token using a refresh token
-  - Request Body: RefreshTokenRequest
-    {
-      "refreshToken": "string"
-    }
-  - Response (200 OK): ApiResponseWrapper<AuthenticationResponse>
+- POST `/auth/logout` — Revoke refresh token / logout.
+  - Request body: { refreshToken }
+  - Response: ApiResponseWrapper<Void>
 
-- POST /auth/logout
-  - Description: Revoke a refresh token / logout
-  - Request Body: RefreshTokenRequest
-  - Response (200 OK): ApiResponseWrapper<Void>
+2) Questions (base path: `/question`)
 
-Authentication DTOs (shapes)
+- GET `/question/all` — Return all questions (no pagination). Roles: ADMIN, USER
+- GET `/question/all/paged?page=0&size=10&sortBy=id` — Return paged questions with `meta`.
+- GET `/question/category/{categoryName}` — Questions filtered by category name.
+- GET `/question/category-id/{categoryId}` — Questions filtered by category id.
+- POST `/question/add` — Create a question (ADMIN only). Request body: QuestionRequest
+- DELETE `/question/delete/{id}` — Delete a question (ADMIN only)
 
-- AuthenticationRequest
-  - username: string
-  - password: string
-  - email: string (required on register)
-  - phoneNumber: string (required on register)
-  - address: string (required on register)
+Note: Question read DTOs intentionally exclude the correct answer to prevent exposure.
 
-- AuthenticationResponse
-  - username: string
-  - role: string
-  - email: string
-  - phoneNumber: string
-  - address: string
-  - profilePicture: string (nullable)
-  - refreshToken: string
-  - authToken: string
+3) Quiz & Category (base path: `/quiz`)
 
-- RefreshTokenRequest
-  - refreshToken: string
+- POST `/quiz/create` — Create a quiz by selecting random questions from a category (ADMIN only)
+  - Request: QuizRequest { categoryId, numQuestions, title }
+  - Response: ApiResponseWrapper<QuizResponse> (201 Created)
 
-2) Questions
+- GET `/quiz/{id}/questions` — Get quiz questions (correct answers excluded)
+- POST `/quiz/{id}/submit` — Submit answers; receives score breakdown (ADMIN/USER)
+  - Request: List<SubmitAnswerRequest> [{ id, response }, ...]
+  - Response: ApiResponseWrapper<QuizScoreResponse>
 
-Base path: /question
+- GET `/quiz/categories?page=0&size=10&sortBy=id` — Get paginated categories
+- POST `/quiz/category/add` — Add category (ADMIN only)
+- PUT `/quiz/category/edit/{id}` — Edit category (ADMIN only)
+- DELETE `/quiz/category/delete/{id}` — Delete category (ADMIN only)
 
-- GET /question/all
-  - Description: Return all questions (no pagination)
-  - Authorization: hasAnyRole('ADMIN','USER')
-  - Response (200 OK): ApiResponseWrapper<List<QuestionResponse>>
+Response wrapper & error format
 
-- GET /question/all/paged?page=0&size=10&sortBy=id
-  - Description: Return paginated questions with pagination metadata
-  - Authorization: hasAnyRole('ADMIN','USER')
-  - Response (200 OK): ApiResponseWrapper<List<QuestionResponse>> with `meta` (PaginationMeta)
+The API standardizes responses using `ApiResponseWrapper<T>` with the following JSON fields:
 
-- GET /question/category/{categoryName}
-  - Description: Return questions filtered by category name
-  - Authorization: hasAnyRole('ADMIN','USER')
-  - Response (200 OK): ApiResponseWrapper<List<QuestionResponse>>
-
-- GET /question/category-id/{categoryId}
-  - Description: Return questions filtered by category id
-  - Authorization: hasAnyRole('ADMIN','USER')
-  - Response (200 OK): ApiResponseWrapper<List<QuestionResponse>>
-
-- POST /question/add
-  - Description: Create a new question (ADMIN only)
-  - Authorization: hasRole('ADMIN')
-  - Request Body: QuestionRequest
-    {
-      "questionTitle": "string",
-      "option1": "string",
-      "option2": "string",
-      "option3": "string",
-      "option4": "string",
-      "rightAnswer": "string",
-      "difficultyLevel": "string",
-      "categoryId": 1
-    }
-  - Response (201 Created): ApiResponseWrapper<QuestionResponse>
-
-- DELETE /question/delete/{id}
-  - Description: Delete a question by id (ADMIN only)
-  - Authorization: hasRole('ADMIN')
-  - Response (200 OK): ApiResponseWrapper<QuestionResponse> (deleted resource)
-
-Question DTOs (shapes)
-
-- QuestionRequest
-  - questionTitle: string
-  - option1: string
-  - option2: string
-  - option3: string
-  - option4: string
-  - rightAnswer: string
-  - difficultyLevel: string
-  - categoryId: integer
-
-- QuestionResponse
-  - id: integer
-  - questionTitle: string
-  - option1: string
-  - option2: string
-  - option3: string
-  - option4: string
-  - difficultyLevel: string
-  - categoryId: integer
-  - categoryName: string
-
-Notes: The `QuestionResponse` intentionally excludes `rightAnswer` to avoid exposing correct answers in read endpoints.
-
-3) Quiz & Category
-
-Base path: /quiz
-
-- POST /quiz/create
-  - Description: Create a new quiz by selecting random questions from a category (ADMIN only)
-  - Authorization: hasRole('ADMIN')
-  - Request Body: QuizRequest
-    {
-      "categoryId": 1,
-      "numQuestions": 10,
-      "title": "Sample Quiz"
-    }
-  - Response (201 Created): ApiResponseWrapper<QuizResponse>
-
-- GET /quiz/{id}/questions
-  - Description: Get quiz questions (rightAnswer excluded)
-  - Authorization: hasAnyRole('ADMIN','USER')
-  - Response (200 OK): ApiResponseWrapper<QuizResponse>
-
-- POST /quiz/{id}/submit
-  - Description: Submit answers for a quiz; returns score breakdown
-  - Authorization: hasAnyRole('ADMIN','USER')
-  - Request Body: List of SubmitAnswerRequest
-    [
-      { "id": 123, "response": "option1" },
-      { "id": 124, "response": "option3" }
-    ]
-  - Response (200 OK): ApiResponseWrapper<QuizScoreResponse>
-
-- GET /quiz/categories?page=0&size=10&sortBy=id
-  - Description: Return paginated categories
-  - Authorization: hasAnyRole('ADMIN','USER')
-  - Response (200 OK): ApiResponseWrapper<List<CategoryResponse>> with PaginationMeta
-
-- POST /quiz/category/add
-  - Description: Add a new category (ADMIN only)
-  - Authorization: hasRole('ADMIN')
-  - Request Body: CategoryRequest
-    { "categoryName": "Java" }
-  - Response (201 Created): ApiResponseWrapper<CategoryResponse>
-
-- PUT /quiz/category/edit/{id}
-  - Description: Edit an existing category (ADMIN only)
-  - Authorization: hasRole('ADMIN')
-  - Request Body: CategoryRequest
-  - Response (200 OK): ApiResponseWrapper<CategoryResponse>
-
-- DELETE /quiz/category/delete/{id}
-  - Description: Delete category (ADMIN only)
-  - Authorization: hasRole('ADMIN')
-  - Response (200 OK): ApiResponseWrapper<CategoryResponse>
-
-Quiz & Category DTOs (shapes)
-
-- QuizRequest
-  - categoryId: integer
-  - numQuestions: integer
-  - title: string
-
-- QuizResponse
-  - id: integer
-  - title: string
-  - questions: array of QuizQuestionResponse
-
-- QuizQuestionResponse
-  - id: integer
-  - questionTitle: string
-  - option1: string
-  - option2: string
-  - option3: string
-  - option4: string
-  (rightAnswer is intentionally excluded)
-
-- SubmitAnswerRequest
-  - id: integer (question id)
-  - response: string (user selected answer)
-
-- QuizScoreResponse
-  - quizId: integer
-  - quizTitle: string
-  - totalQuestions: integer
-  - correctAnswers: integer
-  - wrongAnswers: integer
-  - scorePercentage: double
-
-- CategoryRequest
-  - categoryName: string
-
-- CategoryResponse
-  - id: integer
-  - categoryName: string
-
-Response wrapper and error format
-
-All responses follow the common wrapper:
-
-ApiResponseWrapper<T> (JSON fields)
 - statusCode: integer
 - message: string
-- response: T (the actual payload; may be null)
-- meta: PaginationMeta (optional — present only for paginated endpoints)
+- response: T (may be null)
+- meta: PaginationMeta (present for paged responses)
 
-PaginationMeta fields
-- currentPage: integer
-- pageSize: integer
-- totalElements: long
-- totalPages: integer
-- hasNext: boolean
-- hasPrevious: boolean
+PaginationMeta fields:
+- currentPage, pageSize, totalElements, totalPages, hasNext, hasPrevious
 
-Error responses
+Errors
 
-Errors are handled centrally (see `GlobalExceptionHandler`) and return an `ApiResponseWrapper<Void>` with the following shape:
+Errors are handled centrally and return an `ApiResponseWrapper<Void>` with an appropriate HTTP status code and message. Example shapes:
 
-Example (validation error / bad request):
-{
-  "statusCode": 400,
-  "message": "Validation failed: field: message, ...",
-  "response": null
-}
+- Validation error (400): { statusCode: 400, message: "...validation failed...", response: null }
+- Access denied (403): { statusCode: 403, message: "Access Denied - ...", response: null }
 
-Example (access denied):
-{
-  "statusCode": 403,
-  "message": "Access Denied - You do not have the required permissions to access this resource. ADMIN role required.",
-  "response": null
-}
+Example requests
 
-Examples
-
-1) Login (curl)
+1) Login (PowerShell/curl)
 
 ```bash
 curl -X POST http://localhost:8080/auth/login \
@@ -347,102 +153,35 @@ curl -X POST http://localhost:8080/auth/login \
   -d '{ "username":"admin", "password":"adminpass" }'
 ```
 
-Example response (200 OK):
-
-{
-  "statusCode": 200,
-  "message": "Login successful!",
-  "response": {
-    "username": "admin",
-    "role": "ADMIN",
-    "email": "admin@example.com",
-    "phoneNumber": "1234567890",
-    "address": "Some address",
-    "profilePicture": null,
-    "refreshToken": "<refresh-token>",
-    "authToken": "<jwt-access-token>"
-  }
-}
-
-2) Get all questions (paged) (curl)
+2) Get paged questions (replace <authToken> with a valid token)
 
 ```bash
 curl -X GET "http://localhost:8080/question/all/paged?page=0&size=10&sortBy=id" \
   -H "Authorization: Bearer <authToken>"
 ```
 
-Example response (200 OK):
-
-{
-  "statusCode": 200,
-  "message": "Questions fetched successfully!",
-  "response": [
-    {
-      "id": 1,
-      "questionTitle": "Which keyword is used to inherit a class in Java?",
-      "option1": "implements",
-      "option2": "extends",
-      "option3": "super",
-      "option4": "this",
-      "difficultyLevel": "EASY",
-      "categoryId": 1,
-      "categoryName": "Java"
-    }
-  ],
-  "meta": {
-    "currentPage": 0,
-    "pageSize": 10,
-    "totalElements": 1,
-    "totalPages": 1,
-    "hasNext": false,
-    "hasPrevious": false
-  }
-}
-
-3) Create a question (ADMIN)
+3) Create a quiz (ADMIN only)
 
 ```bash
-curl -X POST http://localhost:8080/question/add \
-  -H "Authorization: Bearer <adminAuthToken>" \
+curl -X POST http://localhost:8080/quiz/create \
   -H "Content-Type: application/json" \
-  -d '{
-    "questionTitle": "Which keyword is used to inherit a class in Java?",
-    "option1": "implements",
-    "option2": "extends",
-    "option3": "super",
-    "option4": "this",
-    "rightAnswer": "extends",
-    "difficultyLevel": "EASY",
-    "categoryId": 1
-  }'
+  -H "Authorization: Bearer <authToken>" \
+  -d '{ "categoryId": 1, "numQuestions": 10, "title": "Sample Quiz" }'
 ```
 
-Example response (201 Created):
+4) Submit quiz answers
 
-{
-  "statusCode": 201,
-  "message": "Question added successfully!",
-  "response": {
-    "id": 2,
-    "questionTitle": "Which keyword is used to inherit a class in Java?",
-    "option1": "implements",
-    "option2": "extends",
-    "option3": "super",
-    "option4": "this",
-    "difficultyLevel": "EASY",
-    "categoryId": 1,
-    "categoryName": "Java"
-  }
-}
+```bash
+curl -X POST http://localhost:8080/quiz/1/submit \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <authToken>" \
+  -d '[{ "id": 123, "response": "option1" }, { "id": 124, "response": "option3" }]' 
+```
 
-Notes & next steps
+Contributing
 
-- This README reflects the controllers and DTOs currently present in the codebase. If you add more endpoints, update the README similarly.
-- If you want, I can also:
-  - Add Postman collection / examples for every endpoint
-  - Seed the database with `data.sql` sample questions and categories
-  - Add swagger / OpenAPI documentation (Springdoc) and a generated API docs page
+If you'd like to contribute, please fork the repository and open a pull request. Include unit tests for new features or bug fixes where applicable.
 
----
+License
 
-If you'd like any change to the README formatting or to include additional example responses, tell me which endpoints you'd like more examples for and I will update the file.
+This project does not include a license file in the repository. Add a LICENSE if you want to open-source it.
