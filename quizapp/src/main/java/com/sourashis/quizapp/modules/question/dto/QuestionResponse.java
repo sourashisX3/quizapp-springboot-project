@@ -3,6 +3,11 @@ package com.sourashis.quizapp.modules.question.dto;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * Response DTO for Question.
+ * Provides a clean separation between the Question entity and what's exposed to clients.
+ * Excludes the right answer to prevent exposing correct answers in read operations.
+ */
 @Data
 @Builder
 public class QuestionResponse {
@@ -14,7 +19,7 @@ public class QuestionResponse {
     private String option3;
     private String option4;
     private String difficultyLevel;
-    private String category;
-    // rightAnswer intentionally excluded — never expose to client
+    private Integer categoryId;
+    private String categoryName;
 }
 

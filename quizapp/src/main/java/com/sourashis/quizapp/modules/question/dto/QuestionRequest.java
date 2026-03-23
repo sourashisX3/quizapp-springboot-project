@@ -1,8 +1,15 @@
 package com.sourashis.quizapp.modules.question.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
+/**
+ * Request DTO for creating or updating a Question.
+ * Validates all required fields and accepts only categoryId (not Category entity).
+ * Follows DTO best practices by not importing entity classes.
+ */
 @Data
 public class QuestionRequest {
 
@@ -27,7 +34,8 @@ public class QuestionRequest {
     @NotBlank(message = "Difficulty level is required")
     private String difficultyLevel;
 
-    @NotBlank(message = "Category is required")
-    private String category;
+    @NotNull(message = "Category ID is required")
+    @Positive(message = "Category ID must be a positive number")
+    private Integer categoryId;
 }
 

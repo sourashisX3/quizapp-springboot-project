@@ -1,9 +1,7 @@
 package com.sourashis.quizapp.modules.question.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.sourashis.quizapp.modules.quiz.entity.Category;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
@@ -19,7 +17,11 @@ public class Question {
     private String option3;
     private String option4;
     private String rightAnswer;
-    private String difficultyLevel;
-    private String category;
+    private DifficultyLevel difficultyLevel;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 }
+
 

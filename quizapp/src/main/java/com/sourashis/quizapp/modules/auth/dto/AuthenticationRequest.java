@@ -12,9 +12,6 @@ public class AuthenticationRequest {
     private String password;
 
     // register only fields
-    // TODO: confirm password validation
-    @NotBlank(message = "Confirm password is required", groups = OnRegister.class)
-    private String confirmPassword;
     @NotBlank(message = "Email is required", groups = OnRegister.class)
     private String email;
     @NotBlank(message = "Phone number is required", groups = OnRegister.class)
