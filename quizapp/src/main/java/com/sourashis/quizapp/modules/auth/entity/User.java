@@ -27,4 +27,5 @@ public class User {
     private String profilePicture;
     private String authToken;
     private String refreshToken;
+    private Integer scores; // TODO: change to scores table
 }
