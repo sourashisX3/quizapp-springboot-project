@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST Controller for Quiz operations.
+ * Handles quiz creation, retrieval, scoring, and category management.
+ */
 @RestController
 @RequestMapping("/quiz")
 public class QuizController {
@@ -30,15 +34,15 @@ public class QuizController {
      * POST /quiz/create
      * Creates a new quiz with random questions from the specified category.
      * Validates category exists and sufficient questions are available.
-     * Access: ADMIN only
+     * Access: Any authenticated user with 'quiz:create' permission
      *
      * @param request QuizRequest with title, categoryId, and numQuestions
      * @return ResponseEntity with created quiz and randomly selected questions
-     * @throws CategoryNotFoundException      if category doesn't exist
-     * @throws InsufficientQuestionsException if not enough questions in category
+     * @throws com.sourashis.quizapp.modules.quiz.exception.CategoryNotFoundException if category doesn't exist
+     * @throws com.sourashis.quizapp.modules.quiz.exception.InsufficientQuestionsException if not enough questions in category
      */
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('quiz:create')")
     public ResponseEntity<ApiResponseWrapper<QuizResponse>> createQuiz(
             @Valid @RequestBody QuizRequest request) {
         QuizResponse response = quizService.createQuiz(request);
@@ -48,10 +52,14 @@ public class QuizController {
     /**
      * GET /quiz/{id}/questions
      * Returns the questions for a given quiz — rightAnswer excluded.
-     * Access: Any authenticated user (ADMIN or USER)
+     * Access: Any authenticated user with 'quiz:read' permission
+     *
+     * @param id the quiz ID
+     * @return ResponseEntity with quiz details and questions
+     * @throws com.sourashis.quizapp.modules.quiz.exception.QuizNotFoundException if quiz doesn't exist
      */
     @GetMapping("/{id}/questions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAuthority('quiz:read')")
     public ResponseEntity<ApiResponseWrapper<QuizResponse>> getQuizQuestions(
             @PathVariable Integer id) {
         QuizResponse response = quizService.getQuizQuestions(id);
@@ -61,10 +69,15 @@ public class QuizController {
     /**
      * POST /quiz/{id}/submit
      * Submits answers and returns the score breakdown.
-     * Access: Any authenticated user (ADMIN or USER)
+     * Access: Any authenticated user with 'quiz:attempt' permission
+     *
+     * @param id        the quiz ID
+     * @param responses list of user's answers
+     * @return ResponseEntity with score details including percentage
+     * @throws com.sourashis.quizapp.modules.quiz.exception.QuizNotFoundException if quiz doesn't exist
      */
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAuthority('quiz:attempt')")
     public ResponseEntity<ApiResponseWrapper<QuizScoreResponse>> submitQuiz(
             @PathVariable Integer id,
             @Valid @RequestBody List<SubmitAnswerRequest> responses) {
@@ -72,14 +85,18 @@ public class QuizController {
         return ApiResponseWrapper.success(score, "Quiz submitted successfully!");
     }
 
-
     /**
-     * GET /quiz/categories/paged?page=0&size=10&sortBy=id
-     * Returns all categories.
-     * Access: Any authenticated user (ADMIN or USER)
+     * GET /quiz/categories?page=0&size=10&sortBy=id
+     * Returns all categories with pagination.
+     * Access: Any authenticated user with 'category:read' permission
+     *
+     * @param page   zero-indexed page number (default: 0)
+     * @param size   page size (default: 10)
+     * @param sortBy field to sort by (default: id)
+     * @return ResponseEntity with paginated list of categories
      */
     @GetMapping("/categories")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAuthority('category:read')")
     public ResponseEntity<ApiResponseWrapper<List<CategoryResponse>>> getAllCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -98,24 +115,33 @@ public class QuizController {
     /**
      * POST /quiz/category/add
      * Adds a new category.
-     * Access: ADMIN only
+     * Access: Any authenticated user with 'category:create' permission
+     *
+     * @param request CategoryRequest with category name
+     * @return ResponseEntity with created category
+     * @throws com.sourashis.quizapp.modules.quiz.exception.CategoryExistsException if category already exists
      */
     @PostMapping("/category/add")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('category:create')")
     public ResponseEntity<ApiResponseWrapper<CategoryResponse>> addCategory(
             @Valid @RequestBody CategoryRequest request) {
         CategoryResponse response = categoryService.addCategory(request);
         return ApiResponseWrapper.created(response, "Category added successfully!");
     }
 
-
     /**
      * PUT /quiz/category/edit/{id}
-     * Edits a category.
-     * Access: ADMIN only
+     * Edits an existing category name.
+     * Access: Any authenticated user with 'category:update' permission
+     *
+     * @param id      the category ID to edit
+     * @param request CategoryRequest with new category name
+     * @return ResponseEntity with updated category
+     * @throws com.sourashis.quizapp.modules.quiz.exception.CategoryNotFoundException if category doesn't exist
+     * @throws com.sourashis.quizapp.modules.quiz.exception.CategoryNamesAreSameException if new name matches existing
      */
     @PutMapping("/category/edit/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('category:update')")
     public ResponseEntity<ApiResponseWrapper<CategoryResponse>> editCategory(
             @PathVariable Integer id,
             @Valid @RequestBody CategoryRequest request
@@ -126,11 +152,15 @@ public class QuizController {
 
     /**
      * DELETE /quiz/category/delete/{id}
-     * Deletes a category.
-     * Access: ADMIN only
+     * Deletes a category by its ID.
+     * Access: Any authenticated user with 'category:delete' permission
+     *
+     * @param id the category ID to delete
+     * @return ResponseEntity with deleted category details
+     * @throws com.sourashis.quizapp.modules.quiz.exception.CategoryNotFoundException if category doesn't exist
      */
     @DeleteMapping("/category/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('category:delete')")
     public ResponseEntity<ApiResponseWrapper<CategoryResponse>> deleteCategory(@PathVariable Integer id) {
         CategoryResponse response = categoryService.deleteCategory(id);
         return ApiResponseWrapper.success(response, "Category deleted successfully!");

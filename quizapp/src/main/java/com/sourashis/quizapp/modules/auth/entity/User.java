@@ -1,5 +1,6 @@
 package com.sourashis.quizapp.modules.auth.entity;
 
+import com.sourashis.quizapp.modules.roles.entity.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,15 +18,19 @@ public class User {
 
     private String password;
 
-    @Enumerated(EnumType.STRING)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
     private Role role;
-
 
     private String email;
     private String phoneNumber;
     private String address;
     private String profilePicture;
+
+    @Column(length = 2000)
     private String authToken;
+
+    @Column(length = 2000)
     private String refreshToken;
-    private Integer scores; // TODO: change to scores table
+    private Integer scores;
 }

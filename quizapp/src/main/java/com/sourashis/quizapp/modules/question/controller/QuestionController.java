@@ -31,12 +31,12 @@ public class QuestionController {
     /**
      * GET /question/all
      * Returns all questions without pagination.
-     * Access: Any authenticated user (ADMIN or USER)
+     * Access: Any authenticated user with 'question:read' permission
      *
      * @return ResponseEntity with list of all questions
      */
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAuthority('question:read')")
     public ResponseEntity<ApiResponseWrapper<List<QuestionResponse>>> getAllQuestions() {
         List<QuestionResponse> questions = questionService.getAllQuestions();
         return ApiResponseWrapper.success(questions, "Questions fetched successfully!");
@@ -45,15 +45,15 @@ public class QuestionController {
     /**
      * GET /question/all/paged?page=0&size=10&sortBy=id
      * Returns paginated questions with metadata.
-     * Access: Any authenticated user (ADMIN or USER)
+     * Access: Any authenticated user with 'question:read' permission
      *
-     * @param page zero-indexed page number (default: 0)
-     * @param size page size (default: 10)
+     * @param page   zero-indexed page number (default: 0)
+     * @param size   page size (default: 10)
      * @param sortBy field to sort by (default: id)
      * @return ResponseEntity with paginated questions and pagination metadata
      */
     @GetMapping("/all/paged")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAuthority('question:read')")
     public ResponseEntity<ApiResponseWrapper<List<QuestionResponse>>> getAllQuestionsPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -69,14 +69,14 @@ public class QuestionController {
     /**
      * GET /question/category/{categoryName}
      * Returns questions filtered by category name.
-     * Access: Any authenticated user (ADMIN or USER)
+     * Access: Any authenticated user with 'question:read' permission
      *
      * @param categoryName the name of the category to filter by
      * @return ResponseEntity with list of questions for the given category
-     * @throws CategoryNotFoundException if category doesn't exist
+     * @throws com.sourashis.quizapp.modules.question.exception.CategoryNotFoundException if category doesn't exist
      */
     @GetMapping("/category/{categoryName}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAuthority('question:read')")
     public ResponseEntity<ApiResponseWrapper<List<QuestionResponse>>> getQuestionsByCategory(
             @PathVariable String categoryName) {
         List<QuestionResponse> questions = questionService.getQuestionsByCategory(categoryName);
@@ -86,14 +86,14 @@ public class QuestionController {
     /**
      * GET /question/category-id/{categoryId}
      * Returns questions filtered by category ID.
-     * Access: Any authenticated user (ADMIN or USER)
+     * Access: Any authenticated user with 'question:read' permission
      *
      * @param categoryId the ID of the category to filter by
      * @return ResponseEntity with list of questions for the given category
-     * @throws CategoryNotFoundException if category doesn't exist
+     * @throws com.sourashis.quizapp.modules.question.exception.CategoryNotFoundException if category doesn't exist
      */
     @GetMapping("/category-id/{categoryId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAuthority('question:read')")
     public ResponseEntity<ApiResponseWrapper<List<QuestionResponse>>> getQuestionsByCategoryId(
             @PathVariable Integer categoryId) {
         List<QuestionResponse> questions = questionService.getQuestionsByCategoryId(categoryId);
@@ -104,15 +104,15 @@ public class QuestionController {
      * POST /question/add
      * Creates a new question.
      * Validates that the referenced category exists and difficulty level is valid.
-     * Access: ADMIN only
+     * Access: Any authenticated user with 'question:create' permission
      *
      * @param request the QuestionRequest DTO with question details
      * @return ResponseEntity with created question
-     * @throws CategoryNotFoundException if referenced category doesn't exist
+     * @throws com.sourashis.quizapp.modules.question.exception.CategoryNotFoundException if referenced category doesn't exist
      * @throws IllegalArgumentException if difficulty level is invalid
      */
     @PostMapping("/add")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('question:create')")
     public ResponseEntity<ApiResponseWrapper<QuestionResponse>> addQuestion(
             @Valid @RequestBody QuestionRequest request) {
         QuestionResponse response = questionService.addQuestion(request);
@@ -122,17 +122,16 @@ public class QuestionController {
     /**
      * DELETE /question/delete/{id}
      * Deletes a question by its ID.
-     * Access: ADMIN only
+     * Access: Any authenticated user with 'question:delete' permission
      *
      * @param id the ID of the question to delete
      * @return ResponseEntity with deleted question details
-     * @throws QuestionNotFoundException if question doesn't exist
+     * @throws com.sourashis.quizapp.modules.question.exception.QuestionNotFoundException if question doesn't exist
      */
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('question:delete')")
     public ResponseEntity<ApiResponseWrapper<QuestionResponse>> deleteQuestion(@PathVariable Integer id) {
         QuestionResponse response = questionService.deleteQuestionById(id);
         return ApiResponseWrapper.success(response, "Question deleted successfully!");
     }
 }
-

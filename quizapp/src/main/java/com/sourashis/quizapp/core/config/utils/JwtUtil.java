@@ -1,5 +1,6 @@
 package com.sourashis.quizapp.core.config.utils;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 @Component
 public class JwtUtil {
@@ -26,25 +29,20 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    /**
-     * Generate access token (shorter expiry - default 1 hour)
-     */
-    public String generateAccessToken(String username, String role) {
+    public String generateAccessToken(String username, String role, Set<String> permissions) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + accessTokenExpiryMs);
 
         return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
+                .claim("permissions", permissions)
                 .setIssuedAt(now)
                 .setExpiration(expiration)
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    /**
-     * Generate refresh token (longer expiry - default 7 days)
-     */
     public String generateRefreshToken(String username) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + refreshTokenExpiryMs);
@@ -72,6 +70,12 @@ public class JwtUtil {
 
     public String extractRole(String token) {
         return (String) Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody().get("role");
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> extractPermissions(String token) {
+        Claims claims = Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody();
+        return claims.get("permissions", List.class);
     }
 
     public Date extractExpiration(String token) {
