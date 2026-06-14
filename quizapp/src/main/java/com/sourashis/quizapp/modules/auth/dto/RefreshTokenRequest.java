@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 public class RefreshTokenRequest {
 
-    @NotBlank(message = "Refresh token is required")
+    @NotBlank
     private String refreshToken;
 }
-

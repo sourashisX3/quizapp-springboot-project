@@ -1,29 +1,26 @@
 package com.sourashis.quizapp.modules.roles.mapper;
 
-import com.sourashis.quizapp.modules.roles.entity.Permission;
-import com.sourashis.quizapp.modules.roles.entity.Role;
 import com.sourashis.quizapp.modules.roles.dto.PermissionResponse;
 import com.sourashis.quizapp.modules.roles.dto.RolesResponse;
+import com.sourashis.quizapp.modules.roles.entity.Permission;
+import com.sourashis.quizapp.modules.roles.entity.Role;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class RolesMapper {
+public final class RolesMapper {
 
-    private RolesMapper() {
-    }
+    private RolesMapper() {}
 
     public static RolesResponse toRoleResponse(Role role) {
-        Set<String> permNames = role.getPermissions() != null
-                ? role.getPermissions().stream().map(Permission::getName).collect(Collectors.toSet())
-                : Collections.emptySet();
-
+        Set<String> permissionNames = role.getPermissions().stream()
+                .map(Permission::getName)
+                .collect(Collectors.toSet());
         return RolesResponse.builder()
                 .id(role.getId())
                 .name(role.getName())
                 .description(role.getDescription())
-                .permissions(permNames)
+                .permissions(permissionNames)
                 .build();
     }
 
@@ -31,6 +28,8 @@ public class RolesMapper {
         return PermissionResponse.builder()
                 .id(permission.getId())
                 .name(permission.getName())
+                .resource(permission.getResource())
+                .action(permission.getAction())
                 .description(permission.getDescription())
                 .build();
     }

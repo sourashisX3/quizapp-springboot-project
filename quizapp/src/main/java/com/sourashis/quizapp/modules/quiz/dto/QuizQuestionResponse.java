@@ -1,20 +1,31 @@
 package com.sourashis.quizapp.modules.quiz.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/**
- * Question shape returned inside a quiz — rightAnswer intentionally excluded.
- */
+import java.util.List;
+
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class QuizQuestionResponse {
 
-    private Integer id;
+    private Long id;
     private String questionTitle;
-    private String option1;
-    private String option2;
-    private String option3;
-    private String option4;
-}
+    private List<OptionResponse> options;
+    private String difficulty;
+    private Integer points;
 
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OptionResponse {
+        private Long id;
+        private String optionText;
+        private Integer sortOrder;
+    }
+}

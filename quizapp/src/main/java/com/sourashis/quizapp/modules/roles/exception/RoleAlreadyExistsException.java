@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 
 public class RoleAlreadyExistsException extends BaseException {
 
-    public RoleAlreadyExistsException(String roleName) {
-        super("Role '" + roleName + "' already exists", HttpStatus.CONFLICT);
+    public RoleAlreadyExistsException(String name) {
+        super("Role already exists with name: " + name, HttpStatus.CONFLICT);
     }
 }

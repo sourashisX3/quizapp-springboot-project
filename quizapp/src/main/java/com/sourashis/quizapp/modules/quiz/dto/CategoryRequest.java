@@ -6,6 +6,12 @@ import lombok.Data;
 @Data
 public class CategoryRequest {
 
-    @NotBlank(message = "Category name is required")
+    @NotBlank
     private String categoryName;
+
+    private String description;
+
+    private String iconUrl;
+
+    private Long parentId;
 }

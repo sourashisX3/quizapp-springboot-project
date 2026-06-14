@@ -5,11 +5,11 @@ import org.springframework.http.HttpStatus;
 
 public class UserNotFoundException extends BaseException {
 
-    public UserNotFoundException(Integer id) {
+    public UserNotFoundException(Long id) {
         super("User not found with id: " + id, HttpStatus.NOT_FOUND);
     }
 
-    public UserNotFoundException(String message) {
-        super(message, HttpStatus.NOT_FOUND);
+    public UserNotFoundException(String username) {
+        super("User not found: " + username, HttpStatus.NOT_FOUND);
     }
 }

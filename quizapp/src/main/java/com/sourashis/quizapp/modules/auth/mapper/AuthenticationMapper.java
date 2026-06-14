@@ -5,41 +5,43 @@ import com.sourashis.quizapp.modules.auth.dto.AuthenticationResponse;
 import com.sourashis.quizapp.modules.auth.entity.User;
 import com.sourashis.quizapp.modules.roles.entity.Permission;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AuthenticationMapper {
 
-    private AuthenticationMapper() {
+    public static User toUserEntity(AuthenticationRequest req) {
+        return User.builder()
+                .username(req.getUsername())
+                .password(req.getPassword())
+                .email(req.getEmail())
+                .phoneNumber(req.getPhoneNumber())
+                .address(req.getAddress())
+                .displayName(req.getDisplayName())
+                .build();
     }
 
-    public static User toUserEntity(AuthenticationRequest request) {
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
-        return user;
-    }
-
-    public static AuthenticationResponse toUserResponse(User user) {
-        String roleName = user.getRole() != null ? user.getRole().getName() : null;
+    public static AuthenticationResponse toUserResponse(User user, String authToken, String refreshToken) {
+        String role = user.getRole() != null ? user.getRole().getName() : null;
 
         Set<String> permissions = user.getRole() != null && user.getRole().getPermissions() != null
                 ? user.getRole().getPermissions().stream()
-                .map(Permission::getName)
-                .collect(Collectors.toSet())
-                : Collections.emptySet();
+                        .map(Permission::getName)
+                        .collect(Collectors.toSet())
+                : java.util.Collections.emptySet();
 
         return AuthenticationResponse.builder()
+                .uuid(user.getUuid())
                 .username(user.getUsername())
-                .role(roleName)
+                .role(role)
                 .permissions(permissions)
-                .address(user.getAddress())
-                .phoneNumber(user.getPhoneNumber())
                 .email(user.getEmail())
-                .profilePicture(user.getProfilePicture())
-                .authToken(user.getAuthToken())
-                .refreshToken(user.getRefreshToken())
+                .phoneNumber(user.getPhoneNumber())
+                .address(user.getAddress())
+                .displayName(user.getDisplayName())
+                .profilePictureUrl(user.getProfilePictureUrl())
+                .authToken(authToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 }

@@ -5,12 +5,11 @@ import org.springframework.http.HttpStatus;
 
 public class QuizNotFoundException extends BaseException {
 
-    public QuizNotFoundException(Integer id) {
-        super("Quiz not found with id: " + id, HttpStatus.NOT_FOUND);
+    public QuizNotFoundException(Long id) {
+        super("Quiz with id '" + id + "' not found", HttpStatus.NOT_FOUND);
     }
 
-    public QuizNotFoundException(String message) {
-        super(message, HttpStatus.NOT_FOUND);
+    public QuizNotFoundException(String uuid) {
+        super("Quiz with uuid '" + uuid + "' not found", HttpStatus.NOT_FOUND);
     }
 }
-

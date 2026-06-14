@@ -1,41 +1,45 @@
 package com.sourashis.quizapp.modules.question.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
-/**
- * Request DTO for creating or updating a Question.
- * Validates all required fields and accepts only categoryId (not Category entity).
- * Follows DTO best practices by not importing entity classes.
- */
+import java.util.List;
+
 @Data
 public class QuestionRequest {
 
-    @NotBlank(message = "Question title is required")
-    private String questionTitle;
+    @NotBlank
+    private String title;
 
-    @NotBlank(message = "Option 1 is required")
-    private String option1;
+    @NotNull
+    private Long categoryId;
 
-    @NotBlank(message = "Option 2 is required")
-    private String option2;
+    @NotBlank
+    private String difficulty;
 
-    @NotBlank(message = "Option 3 is required")
-    private String option3;
+    private String questionType;
 
-    @NotBlank(message = "Option 4 is required")
-    private String option4;
+    private Integer timeLimitSeconds;
 
-    @NotBlank(message = "Right answer is required")
-    private String rightAnswer;
+    private Integer points = 10;
 
-    @NotBlank(message = "Difficulty level is required")
-    private String difficultyLevel;
+    private String tags;
 
-    @NotNull(message = "Category ID is required")
-    @Positive(message = "Category ID must be a positive number")
-    private Integer categoryId;
+    private String explanation;
+
+    @NotEmpty
+    private List<OptionRequest> options;
+
+    @Data
+    public static class OptionRequest {
+
+        @NotBlank
+        private String optionText;
+
+        private boolean isCorrect;
+
+        private String explanation;
+    }
 }
-

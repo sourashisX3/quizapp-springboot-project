@@ -6,10 +6,10 @@ import lombok.Data;
 @Data
 public class SubmitAnswerRequest {
 
-    @NotNull(message = "Question id is required")
-    private Integer id;
+    @NotNull
+    private Long questionId;
 
-    @NotNull(message = "Response is required")
-    private String response;
+    private Long selectedOptionId;
+
+    private String answerText;
 }
-

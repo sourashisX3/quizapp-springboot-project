@@ -5,11 +5,11 @@ import org.springframework.http.HttpStatus;
 
 public class CategoryNotFoundException extends BaseException {
 
-    public CategoryNotFoundException(Integer id) {
-        super("Category not found with id: " + id, HttpStatus.NOT_FOUND);
+    public CategoryNotFoundException(Long id) {
+        super("Category with id '" + id + "' not found", HttpStatus.NOT_FOUND);
     }
 
-    public CategoryNotFoundException(String message) {
-        super(message, HttpStatus.NOT_FOUND);
+    public CategoryNotFoundException(String name) {
+        super("Category with name '" + name + "' not found", HttpStatus.NOT_FOUND);
     }
 }

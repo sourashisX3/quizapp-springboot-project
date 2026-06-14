@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 
 public class CategoryExistsException extends BaseException {
 
-    public CategoryExistsException(String categoryName) {
-        super(categoryName + " already exists", HttpStatus.CONFLICT);
+    public CategoryExistsException(String name) {
+        super("Category with name '" + name + "' already exists", HttpStatus.CONFLICT);
     }
 }

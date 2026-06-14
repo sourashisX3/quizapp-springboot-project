@@ -9,30 +9,36 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "refresh_tokens")
 public class RefreshToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false, unique = true, length = 2000)
-    private String token;
+    @Column(unique = true, nullable = false)
+    private String tokenHash;
 
     @Column(nullable = false)
-    private Instant expiryDate;
+    private Instant expiresAt;
 
-    @Column(nullable = false)
     @Builder.Default
-    private Boolean revoked = false;
+    private boolean revoked = false;
+
+    private Instant revokedAt;
+
+    private Instant createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = Instant.now();
+    }
 }
-
-

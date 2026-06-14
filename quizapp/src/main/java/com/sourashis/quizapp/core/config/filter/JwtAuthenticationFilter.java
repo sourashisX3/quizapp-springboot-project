@@ -1,7 +1,8 @@
 package com.sourashis.quizapp.core.config.filter;
 
 import com.sourashis.quizapp.core.config.utils.JwtUtil;
-import com.sourashis.quizapp.modules.auth.service.CustomUserDetailsService;
+import com.sourashis.quizapp.modules.auth.entity.User;
+import com.sourashis.quizapp.modules.auth.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,8 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private CustomUserDetailsService userDetailsService;
-
+    private UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -38,14 +38,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            var userDetails = userDetailsService.loadUserByUsername(username);
-            var authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user != null) {
+                var authToken = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
         }
-
 
         filterChain.doFilter(request, response);
     }

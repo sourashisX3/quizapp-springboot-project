@@ -2,35 +2,91 @@ package com.sourashis.quizapp.modules.auth.entity;
 
 import com.sourashis.quizapp.modules.roles.entity.Role;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.time.Instant;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String uuid;
 
     @Column(unique = true, nullable = false)
     private String username;
 
+    @Column(nullable = false)
     private String password;
+
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    private String displayName;
+
+    private String phoneNumber;
+
+    private String address;
+
+    private String profilePictureUrl;
+
+    @Builder.Default
+    private String accountStatus = "ACTIVE";
+
+    @Builder.Default
+    private boolean emailVerified = false;
+
+    private Instant lastLoginAt;
+
+    private Instant createdAt;
+
+    private Instant updatedAt;
+
+    @Builder.Default
+    private int version = 0;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     private Role role;
 
-    private String email;
-    private String phoneNumber;
-    private String address;
-    private String profilePicture;
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (role == null) {
+            return java.util.Collections.emptySet();
+        }
+        return Stream.concat(
+                Stream.of(new SimpleGrantedAuthority(role.getName())),
+                role.getPermissions().stream()
+                        .map(permission -> new SimpleGrantedAuthority(permission.getName()))
+        ).collect(Collectors.toSet());
+    }
 
-    @Column(length = 2000)
-    private String authToken;
+    @PrePersist
+    public void prePersist() {
+        this.uuid = UUID.randomUUID().toString();
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
 
-    @Column(length = 2000)
-    private String refreshToken;
-    private Integer scores;
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = Instant.now();
+    }
 }

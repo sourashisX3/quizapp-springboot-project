@@ -1,14 +1,15 @@
 package com.sourashis.quizapp.modules.auth.service;
 
 import com.sourashis.quizapp.modules.auth.entity.User;
-import org.jspecify.annotations.Nullable;
+import com.sourashis.quizapp.modules.roles.entity.Permission;
+import com.sourashis.quizapp.modules.roles.entity.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CustomUserDetails implements UserDetails {
 
@@ -20,20 +21,19 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        if (user.getRole() != null) {
-            authorities.add(new SimpleGrantedAuthority(user.getRole().getName()));
-            if (user.getRole().getPermissions() != null) {
-                user.getRole().getPermissions().stream()
-                        .map(perm -> new SimpleGrantedAuthority(perm.getName()))
-                        .forEach(authorities::add);
-            }
+        Role role = user.getRole();
+        if (role == null) {
+            return java.util.Collections.emptySet();
         }
-        return authorities;
+        return Stream.concat(
+                Stream.of(new SimpleGrantedAuthority(role.getName())),
+                role.getPermissions().stream()
+                        .map(permission -> new SimpleGrantedAuthority(permission.getName()))
+        ).collect(Collectors.toSet());
     }
 
     @Override
-    public @Nullable String getPassword() {
+    public String getPassword() {
         return user.getPassword();
     }
 

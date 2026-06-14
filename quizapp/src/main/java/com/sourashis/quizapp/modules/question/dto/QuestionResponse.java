@@ -1,25 +1,43 @@
 package com.sourashis.quizapp.modules.question.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/**
- * Response DTO for Question.
- * Provides a clean separation between the Question entity and what's exposed to clients.
- * Excludes the right answer to prevent exposing correct answers in read operations.
- */
+import java.time.Instant;
+import java.util.List;
+
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class QuestionResponse {
 
-    private Integer id;
-    private String questionTitle;
-    private String option1;
-    private String option2;
-    private String option3;
-    private String option4;
-    private String difficultyLevel;
-    private Integer categoryId;
+    private Long id;
+    private String uuid;
+    private String title;
+    private Long categoryId;
     private String categoryName;
-}
+    private String difficulty;
+    private String questionType;
+    private Integer timeLimitSeconds;
+    private Integer points;
+    private String tags;
+    private String explanation;
+    private boolean isActive;
+    private List<OptionResponse> options;
+    private Instant createdAt;
 
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OptionResponse {
+
+        private Long id;
+        private String optionText;
+        private Integer sortOrder;
+        private String explanation;
+    }
+}

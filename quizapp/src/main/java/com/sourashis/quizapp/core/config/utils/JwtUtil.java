@@ -16,7 +16,7 @@ import java.util.Set;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:your-256-bit-secret-key-must-be-at-least-32-chars-long-replace-in-properties}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Value("${jwt.access-token-expiry-ms:3600000}")
@@ -29,12 +29,12 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    public String generateAccessToken(String username, String role, Set<String> permissions) {
+    public String generateAccessToken(String username, Long userId, String role, Set<String> permissions) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + accessTokenExpiryMs);
-
         return Jwts.builder()
                 .setSubject(username)
+                .claim("userId", userId)
                 .claim("role", role)
                 .claim("permissions", permissions)
                 .setIssuedAt(now)
@@ -46,7 +46,6 @@ public class JwtUtil {
     public String generateRefreshToken(String username) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + refreshTokenExpiryMs);
-
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(now)
@@ -58,18 +57,23 @@ public class JwtUtil {
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token);
+            return true;
         } catch (JwtException | IllegalArgumentException ex) {
             return false;
         }
-        return true;
     }
 
     public String extractUsername(String token) {
         return Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody().getSubject();
     }
 
+    public Long extractUserId(String token) {
+        return Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody().get("userId", Long.class);
+    }
+
     public String extractRole(String token) {
-        return (String) Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody().get("role");
+        Claims claims = Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody();
+        return claims.get("role", String.class);
     }
 
     @SuppressWarnings("unchecked")
