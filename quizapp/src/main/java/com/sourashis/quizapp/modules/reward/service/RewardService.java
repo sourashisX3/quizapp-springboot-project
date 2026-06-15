@@ -2,8 +2,16 @@ package com.sourashis.quizapp.modules.reward.service;
 
 import com.sourashis.quizapp.modules.reward.dto.AchievementResponse;
 import com.sourashis.quizapp.modules.reward.dto.BadgeResponse;
-import com.sourashis.quizapp.modules.reward.entity.*;
-import com.sourashis.quizapp.modules.reward.repository.*;
+import com.sourashis.quizapp.modules.reward.entity.Badge;
+import com.sourashis.quizapp.modules.reward.entity.Achievement;
+import com.sourashis.quizapp.modules.reward.entity.UserBadge;
+import com.sourashis.quizapp.modules.reward.entity.UserAchievement;
+import com.sourashis.quizapp.modules.reward.entity.Reward;
+import com.sourashis.quizapp.modules.reward.repository.BadgeRepository;
+import com.sourashis.quizapp.modules.reward.repository.AchievementRepository;
+import com.sourashis.quizapp.modules.reward.repository.UserBadgeRepository;
+import com.sourashis.quizapp.modules.reward.repository.UserAchievementRepository;
+import com.sourashis.quizapp.modules.reward.repository.RewardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +56,22 @@ public class RewardService {
                     .isCompleted(ua != null && Boolean.TRUE.equals(ua.getIsCompleted()))
                     .completedAt(ua != null ? ua.getCompletedAt() : null).build();
         }).toList();
+    }
+
+    public void evaluateAndAward(Long userId) {
+    }
+
+    public Reward createReward(Long userId, String rewardType, String sourceType, Long sourceId, String rewardValue, Integer xpAmount) {
+        Reward reward = Reward.builder()
+                .userId(userId)
+                .rewardType(rewardType)
+                .sourceType(sourceType)
+                .sourceId(sourceId)
+                .rewardValue(rewardValue)
+                .xpAmount(xpAmount != null ? xpAmount : 0)
+                .claimed(false)
+                .build();
+        return rewardRepository.save(reward);
     }
 
     @Transactional(readOnly = true)

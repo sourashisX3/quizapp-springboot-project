@@ -48,6 +48,20 @@ public class User {
 
     private String profilePictureUrl;
 
+    private String bio;
+
+    @Column(columnDefinition = "TEXT")
+    private String socialLinksJson;
+
+    @Builder.Default
+    private Integer level = 1;
+
+    @Builder.Default
+    private Long currentXp = 0L;
+
+    @Builder.Default
+    private Long xpForNextLevel = 100L;
+
     @Builder.Default
     private String accountStatus = "ACTIVE";
 

@@ -1,8 +1,12 @@
 package com.sourashis.quizapp.modules.quiz.service;
 
+import com.sourashis.quizapp.modules.activity.service.ActivityLogService;
 import com.sourashis.quizapp.modules.analytics.entity.UserStatistics;
 import com.sourashis.quizapp.modules.analytics.repository.UserStatisticsRepository;
 import com.sourashis.quizapp.modules.auth.entity.User;
+import com.sourashis.quizapp.modules.contest.entity.ContestParticipant;
+import com.sourashis.quizapp.modules.contest.repository.ContestParticipantRepository;
+import com.sourashis.quizapp.modules.mission.service.MissionService;
 import com.sourashis.quizapp.modules.question.entity.Question;
 import com.sourashis.quizapp.modules.question.entity.QuestionOption;
 import com.sourashis.quizapp.modules.question.repository.QuestionOptionRepository;
@@ -18,6 +22,7 @@ import com.sourashis.quizapp.modules.quiz.entity.QuizAttempt;
 import com.sourashis.quizapp.modules.quiz.entity.QuizQuestion;
 import com.sourashis.quizapp.modules.quiz.exception.CategoryNotFoundException;
 import com.sourashis.quizapp.modules.quiz.exception.InsufficientQuestionsException;
+import com.sourashis.quizapp.modules.quiz.exception.MaxAttemptsExceededException;
 import com.sourashis.quizapp.modules.quiz.exception.QuizNotFoundException;
 import com.sourashis.quizapp.modules.quiz.mapper.QuizMapper;
 import com.sourashis.quizapp.modules.quiz.repository.CategoryRepository;
@@ -25,12 +30,15 @@ import com.sourashis.quizapp.modules.quiz.repository.QuizAnswerRepository;
 import com.sourashis.quizapp.modules.quiz.repository.QuizAttemptRepository;
 import com.sourashis.quizapp.modules.quiz.repository.QuizQuestionRepository;
 import com.sourashis.quizapp.modules.quiz.repository.QuizRepository;
+import com.sourashis.quizapp.modules.reward.service.RewardService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,6 +73,21 @@ public class QuizService {
 
     @Autowired
     private UserStatisticsRepository userStatisticsRepository;
+
+    @Autowired
+    private ContestParticipantRepository contestParticipantRepository;
+
+    @Autowired
+    @Lazy
+    private RewardService rewardService;
+
+    @Autowired
+    @Lazy
+    private MissionService missionService;
+
+    @Autowired
+    @Lazy
+    private ActivityLogService activityLogService;
 
     @Transactional
     public QuizResponse createQuiz(QuizRequest req) {
@@ -122,6 +145,10 @@ public class QuizService {
 
         List<QuizQuestion> quizQuestions = quizQuestionRepository.findByQuizIdOrderBySortOrder(id);
 
+        if (Boolean.TRUE.equals(quiz.getIsRandomized())) {
+            Collections.shuffle(quizQuestions);
+        }
+
         Map<Long, Question> questionMap = new HashMap<>();
         Map<Long, List<QuestionOption>> optionsMap = new HashMap<>();
         for (QuizQuestion qq : quizQuestions) {
@@ -144,6 +171,11 @@ public class QuizService {
                 .orElseThrow(() -> new QuizNotFoundException(quizId));
 
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        long attemptCount = quizAttemptRepository.countByUserIdAndQuizId(currentUser.getId(), quizId);
+        if (quiz.getMaxAttempts() > 0 && attemptCount >= quiz.getMaxAttempts()) {
+            throw new MaxAttemptsExceededException(quiz.getMaxAttempts());
+        }
 
         List<QuizQuestion> quizQuestions = quizQuestionRepository.findByQuizIdOrderBySortOrder(quizId);
 
@@ -220,12 +252,26 @@ public class QuizService {
         }
         quizAnswerRepository.saveAll(answers);
 
-        updateUserStatistics(currentUser, attempt, correctCount, responses.size());
+        updateUserStatistics(currentUser, attempt, correctCount, responses.size(), earnedPoints, passed);
+
+        if (attempt.getContestParticipantId() != null) {
+            ContestParticipant participant = contestParticipantRepository
+                    .findByContestIdAndUserId(quizId, currentUser.getId())
+                    .orElse(null);
+            if (participant != null) {
+                participant.setScore(earnedPoints);
+                participant.setTimeTakenSeconds(attempt.getTimeTakenSeconds());
+                participant.setStatus("COMPLETED");
+                participant.setCompletedAt(now);
+                contestParticipantRepository.save(participant);
+            }
+        }
 
         return QuizMapper.toScoreResponse(attempt, quiz, answers);
     }
 
-    private void updateUserStatistics(User user, QuizAttempt attempt, int correctCount, int totalAnswered) {
+    private void updateUserStatistics(User user, QuizAttempt attempt, int correctCount, int totalAnswered,
+                                       int earnedPoints, boolean passed) {
         UserStatistics stats = userStatisticsRepository.findByUserId(user.getId())
                 .orElseGet(() -> UserStatistics.builder()
                         .userId(user.getId())
@@ -238,9 +284,30 @@ public class QuizService {
         stats.setTotalQuestionsAnswered(stats.getTotalQuestionsAnswered() + totalAnswered);
         stats.setTotalCorrectAnswers(stats.getTotalCorrectAnswers() + correctCount);
         stats.setTotalScore(stats.getTotalScore() + attempt.getScore());
-        stats.setTotalXp(stats.getTotalXp() + attempt.getScore());
         stats.setLastActiveAt(Instant.now());
+
+        Instant oldLastQuizAt = stats.getLastQuizAt();
         stats.setLastQuizAt(Instant.now());
+
+        if (oldLastQuizAt != null) {
+            long hoursSinceLastQuiz = ChronoUnit.HOURS.between(oldLastQuizAt, Instant.now());
+            if (hoursSinceLastQuiz >= 24 && hoursSinceLastQuiz < 48) {
+                stats.setCurrentStreak(stats.getCurrentStreak() + 1);
+            } else if (hoursSinceLastQuiz < 24) {
+                // Same day, streak stays
+            } else {
+                stats.setCurrentStreak(1);
+            }
+            if (stats.getCurrentStreak() > stats.getLongestStreak()) {
+                stats.setLongestStreak(stats.getCurrentStreak());
+            }
+        } else {
+            stats.setCurrentStreak(1);
+            stats.setLongestStreak(1);
+        }
+
+        int xpEarned = earnedPoints + (passed ? 10 : 0) + (stats.getCurrentStreak() >= 3 ? 5 : 0);
+        stats.setTotalXp(stats.getTotalXp() + xpEarned);
 
         if (stats.getTotalQuizzesTaken() > 0) {
             double avgPct = (double) stats.getTotalCorrectAnswers() / stats.getTotalQuestionsAnswered() * 100;
@@ -248,5 +315,13 @@ public class QuizService {
         }
 
         userStatisticsRepository.save(stats);
+
+        rewardService.evaluateAndAward(user.getId());
+        missionService.updateMissionProgress(user.getId(), "DAILY", "QUIZZES_TAKEN", 1);
+        missionService.updateMissionProgress(user.getId(), "DAILY", "XP_EARNED", xpEarned);
+        missionService.updateMissionProgress(user.getId(), "WEEKLY", "QUIZZES_TAKEN", 1);
+        activityLogService.logActivity(user.getId(), "QUIZ_COMPLETED",
+                "Completed quiz: " + attempt.getQuizId(), attempt.getQuizId(), "QUIZ",
+                "{\"score\":" + earnedPoints + ",\"passed\":" + passed + "}");
     }
 }

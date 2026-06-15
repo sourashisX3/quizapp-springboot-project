@@ -18,4 +18,6 @@ public interface ContestRepository extends JpaRepository<Contest, Long> {
     List<Contest> findByIsActiveTrueAndStartsAtBeforeAndEndsAtAfter(Instant start, Instant end);
 
     List<Contest> findByEndsAtBeforeAndIsActiveTrue(Instant endsAt);
+
+    List<Contest> findByIsActiveTrueAndStartsAtAfter(Instant startsAt);
 }
