@@ -12,6 +12,8 @@ import java.util.Optional;
 @Repository
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
+    Optional<Quiz> findByTitle(String title);
+
     Optional<Quiz> findByUuid(String uuid);
 
     Page<Quiz> findByCategoryId(Long categoryId, Pageable pageable);
