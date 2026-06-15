@@ -47,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -219,169 +220,154 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private Map<String, Question> seedQuestions(Map<String, Category> categoryMap) {
-        if (questionRepository.count() > 0) {
-            return questionRepository.findAll().stream().collect(Collectors.toMap(Question::getTitle, q -> q, (a, b) -> a));
+        Map<String, Question> questionMap = new LinkedHashMap<>();
+        for (Question q : questionRepository.findAll()) {
+            questionMap.put(q.getTitle(), q);
         }
-        log.info("Seeding questions...");
 
         Category programming = categoryMap.get("Programming");
         Category science = categoryMap.get("Science");
         Category mathematics = categoryMap.get("Mathematics");
         Category generalKnowledge = categoryMap.get("General Knowledge");
 
-        Question q1 = questionRepository.save(Question.builder()
-                .title("What is the correct way to declare a variable in Java?")
-                .category(programming).difficulty(DifficultyLevel.EASY).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q1).optionText("int x = 5;").isCorrect(true).sortOrder(1).build(),
-                QuestionOption.builder().question(q1).optionText("variable x = 5;").isCorrect(false).sortOrder(2).build(),
-                QuestionOption.builder().question(q1).optionText("x = 5 int;").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q1).optionText("int x == 5;").isCorrect(false).sortOrder(4).build()
-        ));
+        int created = 0;
+        created += createQuestionIfMissing(questionMap, "What is the correct way to declare a variable in Java?",
+                programming, DifficultyLevel.EASY, 10,
+                List.of(
+                        QuestionOption.builder().optionText("int x = 5;").isCorrect(true).sortOrder(1).build(),
+                        QuestionOption.builder().optionText("variable x = 5;").isCorrect(false).sortOrder(2).build(),
+                        QuestionOption.builder().optionText("x = 5 int;").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().optionText("int x == 5;").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "Which of these is not an OOP principle?",
+                programming, DifficultyLevel.EASY, 10,
+                List.of(
+                        QuestionOption.builder().optionText("Encapsulation").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().optionText("Inheritance").isCorrect(false).sortOrder(2).build(),
+                        QuestionOption.builder().optionText("Polymorphism").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().optionText("Compilation").isCorrect(true).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "What is the chemical symbol for water?",
+                science, DifficultyLevel.EASY, 10,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("H2O").isCorrect(true).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("CO2").isCorrect(false).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("NaCl").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("O2").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "What planet is known as the Red Planet?",
+                science, DifficultyLevel.EASY, 10,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("Venus").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("Mars").isCorrect(true).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("Jupiter").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("Saturn").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "What is the value of Pi (\u03c0) to 2 decimal places?",
+                mathematics, DifficultyLevel.EASY, 10,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("3.14").isCorrect(true).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("3.16").isCorrect(false).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("3.12").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("3.18").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "What is the square root of 144?",
+                mathematics, DifficultyLevel.EASY, 10,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("10").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("12").isCorrect(true).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("14").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("16").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "Which country has the largest population?",
+                generalKnowledge, DifficultyLevel.MEDIUM, 10,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("India").isCorrect(true).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("USA").isCorrect(false).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("Indonesia").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("China").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "What is the capital of Japan?",
+                generalKnowledge, DifficultyLevel.EASY, 10,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("Seoul").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("Beijing").isCorrect(false).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("Tokyo").isCorrect(true).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("Bangkok").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "What is the time complexity of binary search?",
+                programming, DifficultyLevel.MEDIUM, 15,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("O(n)").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("O(log n)").isCorrect(true).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("O(n log n)").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("O(n^2)").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "Which design pattern ensures a class has only one instance?",
+                programming, DifficultyLevel.HARD, 20,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("Factory Pattern").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("Observer Pattern").isCorrect(false).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("Singleton Pattern").isCorrect(true).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("Builder Pattern").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "What is the speed of light in vacuum (approx)?",
+                science, DifficultyLevel.MEDIUM, 15,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("3 \u00d7 10^6 m/s").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("3 \u00d7 10^8 m/s").isCorrect(true).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("3 \u00d7 10^10 m/s").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("3 \u00d7 10^4 m/s").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "What is the atomic number of Carbon?",
+                science, DifficultyLevel.EASY, 10,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("4").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("8").isCorrect(false).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("6").isCorrect(true).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("12").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "What is the derivative of x\u00b2?",
+                mathematics, DifficultyLevel.MEDIUM, 15,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("x").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("2x").isCorrect(true).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("x\u00b2").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("2").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "Who wrote Romeo and Juliet?",
+                generalKnowledge, DifficultyLevel.EASY, 10,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("Charles Dickens").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("William Shakespeare").isCorrect(true).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("Jane Austen").isCorrect(false).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("Mark Twain").isCorrect(false).sortOrder(4).build()
+                ));
+        created += createQuestionIfMissing(questionMap, "What gas do plants primarily absorb from the atmosphere?",
+                science, DifficultyLevel.EASY, 10,
+                List.of(
+                        QuestionOption.builder().question(null).optionText("Oxygen").isCorrect(false).sortOrder(1).build(),
+                        QuestionOption.builder().question(null).optionText("Nitrogen").isCorrect(false).sortOrder(2).build(),
+                        QuestionOption.builder().question(null).optionText("Carbon Dioxide").isCorrect(true).sortOrder(3).build(),
+                        QuestionOption.builder().question(null).optionText("Hydrogen").isCorrect(false).sortOrder(4).build()
+                ));
 
-        Question q2 = questionRepository.save(Question.builder()
-                .title("Which of these is not an OOP principle?")
-                .category(programming).difficulty(DifficultyLevel.EASY).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q2).optionText("Encapsulation").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q2).optionText("Inheritance").isCorrect(false).sortOrder(2).build(),
-                QuestionOption.builder().question(q2).optionText("Polymorphism").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q2).optionText("Compilation").isCorrect(true).sortOrder(4).build()
-        ));
+        if (created > 0) {
+            log.info("Created {} new questions with options.", created);
+        }
+        return questionMap;
+    }
 
-        Question q3 = questionRepository.save(Question.builder()
-                .title("What is the chemical symbol for water?")
-                .category(science).difficulty(DifficultyLevel.EASY).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q3).optionText("H2O").isCorrect(true).sortOrder(1).build(),
-                QuestionOption.builder().question(q3).optionText("CO2").isCorrect(false).sortOrder(2).build(),
-                QuestionOption.builder().question(q3).optionText("NaCl").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q3).optionText("O2").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q4 = questionRepository.save(Question.builder()
-                .title("What planet is known as the Red Planet?")
-                .category(science).difficulty(DifficultyLevel.EASY).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q4).optionText("Venus").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q4).optionText("Mars").isCorrect(true).sortOrder(2).build(),
-                QuestionOption.builder().question(q4).optionText("Jupiter").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q4).optionText("Saturn").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q5 = questionRepository.save(Question.builder()
-                .title("What is the value of Pi (\u03c0) to 2 decimal places?")
-                .category(mathematics).difficulty(DifficultyLevel.EASY).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q5).optionText("3.14").isCorrect(true).sortOrder(1).build(),
-                QuestionOption.builder().question(q5).optionText("3.16").isCorrect(false).sortOrder(2).build(),
-                QuestionOption.builder().question(q5).optionText("3.12").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q5).optionText("3.18").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q6 = questionRepository.save(Question.builder()
-                .title("What is the square root of 144?")
-                .category(mathematics).difficulty(DifficultyLevel.EASY).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q6).optionText("10").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q6).optionText("12").isCorrect(true).sortOrder(2).build(),
-                QuestionOption.builder().question(q6).optionText("14").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q6).optionText("16").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q7 = questionRepository.save(Question.builder()
-                .title("Which country has the largest population?")
-                .category(generalKnowledge).difficulty(DifficultyLevel.MEDIUM).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q7).optionText("India").isCorrect(true).sortOrder(1).build(),
-                QuestionOption.builder().question(q7).optionText("USA").isCorrect(false).sortOrder(2).build(),
-                QuestionOption.builder().question(q7).optionText("Indonesia").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q7).optionText("China").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q8 = questionRepository.save(Question.builder()
-                .title("What is the capital of Japan?")
-                .category(generalKnowledge).difficulty(DifficultyLevel.EASY).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q8).optionText("Seoul").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q8).optionText("Beijing").isCorrect(false).sortOrder(2).build(),
-                QuestionOption.builder().question(q8).optionText("Tokyo").isCorrect(true).sortOrder(3).build(),
-                QuestionOption.builder().question(q8).optionText("Bangkok").isCorrect(false).sortOrder(4).build()
-        ));
-
-        // Additional questions for richer test data
-        Question q9 = questionRepository.save(Question.builder()
-                .title("What is the time complexity of binary search?")
-                .category(programming).difficulty(DifficultyLevel.MEDIUM).points(15).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q9).optionText("O(n)").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q9).optionText("O(log n)").isCorrect(true).sortOrder(2).build(),
-                QuestionOption.builder().question(q9).optionText("O(n log n)").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q9).optionText("O(n^2)").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q10 = questionRepository.save(Question.builder()
-                .title("Which design pattern ensures a class has only one instance?")
-                .category(programming).difficulty(DifficultyLevel.HARD).points(20).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q10).optionText("Factory Pattern").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q10).optionText("Observer Pattern").isCorrect(false).sortOrder(2).build(),
-                QuestionOption.builder().question(q10).optionText("Singleton Pattern").isCorrect(true).sortOrder(3).build(),
-                QuestionOption.builder().question(q10).optionText("Builder Pattern").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q11 = questionRepository.save(Question.builder()
-                .title("What is the speed of light in vacuum (approx)?")
-                .category(science).difficulty(DifficultyLevel.MEDIUM).points(15).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q11).optionText("3 \u00d7 10^6 m/s").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q11).optionText("3 \u00d7 10^8 m/s").isCorrect(true).sortOrder(2).build(),
-                QuestionOption.builder().question(q11).optionText("3 \u00d7 10^10 m/s").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q11).optionText("3 \u00d7 10^4 m/s").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q12 = questionRepository.save(Question.builder()
-                .title("What is the atomic number of Carbon?")
-                .category(science).difficulty(DifficultyLevel.EASY).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q12).optionText("4").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q12).optionText("8").isCorrect(false).sortOrder(2).build(),
-                QuestionOption.builder().question(q12).optionText("6").isCorrect(true).sortOrder(3).build(),
-                QuestionOption.builder().question(q12).optionText("12").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q13 = questionRepository.save(Question.builder()
-                .title("What is the derivative of x\u00b2?")
-                .category(mathematics).difficulty(DifficultyLevel.MEDIUM).points(15).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q13).optionText("x").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q13).optionText("2x").isCorrect(true).sortOrder(2).build(),
-                QuestionOption.builder().question(q13).optionText("x\u00b2").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q13).optionText("2").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q14 = questionRepository.save(Question.builder()
-                .title("Who wrote Romeo and Juliet?")
-                .category(generalKnowledge).difficulty(DifficultyLevel.EASY).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q14).optionText("Charles Dickens").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q14).optionText("William Shakespeare").isCorrect(true).sortOrder(2).build(),
-                QuestionOption.builder().question(q14).optionText("Jane Austen").isCorrect(false).sortOrder(3).build(),
-                QuestionOption.builder().question(q14).optionText("Mark Twain").isCorrect(false).sortOrder(4).build()
-        ));
-
-        Question q15 = questionRepository.save(Question.builder()
-                .title("What gas do plants primarily absorb from the atmosphere?")
-                .category(science).difficulty(DifficultyLevel.EASY).points(10).build());
-        questionOptionRepository.saveAll(List.of(
-                QuestionOption.builder().question(q15).optionText("Oxygen").isCorrect(false).sortOrder(1).build(),
-                QuestionOption.builder().question(q15).optionText("Nitrogen").isCorrect(false).sortOrder(2).build(),
-                QuestionOption.builder().question(q15).optionText("Carbon Dioxide").isCorrect(true).sortOrder(3).build(),
-                QuestionOption.builder().question(q15).optionText("Hydrogen").isCorrect(false).sortOrder(4).build()
-        ));
-
-        log.info("Created 15 questions with options.");
-        return questionRepository.findAll().stream().collect(Collectors.toMap(Question::getTitle, q -> q, (a, b) -> a));
+    private int createQuestionIfMissing(Map<String, Question> questionMap, String title,
+                                         Category category, DifficultyLevel difficulty, int points,
+                                         List<QuestionOption> options) {
+        if (questionMap.containsKey(title)) return 0;
+        Question q = questionRepository.save(Question.builder()
+                .title(title).category(category).difficulty(difficulty).points(points).build());
+        options.forEach(opt -> opt.setQuestion(q));
+        questionOptionRepository.saveAll(options);
+        questionMap.put(title, q);
+        return 1;
     }
 
     private void seedLevelConfigs() {
@@ -463,54 +449,66 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private Map<String, User> seedUsers(Map<String, Role> roleMap) {
-        if (userRepository.count() > 0) {
-            return userRepository.findAll().stream().collect(Collectors.toMap(User::getUsername, u -> u));
+        Map<String, User> userMap = new LinkedHashMap<>();
+        for (User u : userRepository.findAll()) {
+            userMap.put(u.getUsername(), u);
         }
-        log.info("Seeding users...");
 
         Role superAdminRole = roleMap.get("ROLE_SUPER_ADMIN");
         Role adminRole = roleMap.get("ROLE_ADMIN");
         Role userRole = roleMap.get("ROLE_USER");
 
-        User superUser = User.builder()
-                .username("superadmin")
-                .password(passwordEncoder.encode("superadmin123"))
-                .email("superadmin@quizapp.com")
-                .displayName("Super Admin")
-                .phoneNumber("0000000000")
-                .address("System")
-                .role(superAdminRole)
-                .build();
+        if (!userMap.containsKey("superadmin")) {
+            User superUser = userRepository.save(User.builder()
+                    .username("superadmin")
+                    .password(passwordEncoder.encode("superadmin123"))
+                    .email("superadmin@quizapp.com")
+                    .displayName("Super Admin")
+                    .phoneNumber("0000000000")
+                    .address("System")
+                    .role(superAdminRole)
+                    .build());
+            userMap.put("superadmin", superUser);
+            log.info("Created superadmin user.");
+        }
 
-        User player1 = User.builder()
-                .username("john_doe")
-                .password(passwordEncoder.encode("password123"))
-                .email("john@example.com")
-                .displayName("John Doe")
-                .phoneNumber("1111111111")
-                .address("123 Main St")
-                .role(userRole)
-                .build();
+        if (!userMap.containsKey("john_doe")) {
+            User player1 = userRepository.save(User.builder()
+                    .username("john_doe")
+                    .password(passwordEncoder.encode("password123"))
+                    .email("john@example.com")
+                    .displayName("John Doe")
+                    .phoneNumber("1111111111")
+                    .address("123 Main St")
+                    .role(userRole)
+                    .build());
+            userMap.put("john_doe", player1);
+            log.info("Created john_doe user.");
+        }
 
-        User moderator = User.builder()
-                .username("moderator")
-                .password(passwordEncoder.encode("moderator123"))
-                .email("moderator@quizapp.com")
-                .displayName("Moderator")
-                .phoneNumber("2222222222")
-                .address("Moderation Team")
-                .role(adminRole)
-                .build();
+        if (!userMap.containsKey("moderator")) {
+            User moderator = userRepository.save(User.builder()
+                    .username("moderator")
+                    .password(passwordEncoder.encode("moderator123"))
+                    .email("moderator@quizapp.com")
+                    .displayName("Moderator")
+                    .phoneNumber("2222222222")
+                    .address("Moderation Team")
+                    .role(adminRole)
+                    .build());
+            userMap.put("moderator", moderator);
+            log.info("Created moderator user.");
+        }
 
-        userRepository.saveAll(List.of(superUser, player1, moderator));
-        log.info("Created 3 users: superadmin, john_doe, moderator");
-        return Map.of("superadmin", superUser, "john_doe", player1, "moderator", moderator);
+        return userMap;
     }
 
     private void seedUserStatistics(Map<String, User> userMap) {
-        if (userStatisticsRepository.count() > 0) return;
-        log.info("Seeding user statistics...");
+        Set<Long> existingUserIds = userStatisticsRepository.findAll().stream()
+                .map(UserStatistics::getUserId).collect(Collectors.toSet());
+        int created = 0;
         for (User user : userMap.values()) {
+            if (existingUserIds.contains(user.getId())) continue;
             userStatisticsRepository.save(UserStatistics.builder()
                     .userId(user.getId())
                     .totalQuizzesTaken(0).totalQuizzesPassed(0)
@@ -520,111 +518,101 @@ public class DataInitializer implements CommandLineRunner {
                     .totalContestsParticipated(0).totalContestsWon(0)
                     .badgesCount(0).achievementsCount(0)
                     .build());
+            created++;
         }
-        log.info("Created statistics for {} users.", userMap.size());
+        if (created > 0) {
+            log.info("Created statistics for {} users.", created);
+        }
     }
 
     private void seedQuizzes(Map<String, Category> categoryMap, Map<String, Question> questionMap, Map<String, User> userMap) {
-        if (quizRepository.count() > 0) return;
-        log.info("Seeding quizzes...");
-
         Category programming = categoryMap.get("Programming");
         Category science = categoryMap.get("Science");
         Category mathematics = categoryMap.get("Mathematics");
         Category generalKnowledge = categoryMap.get("General Knowledge");
         User superUser = userMap.get("superadmin");
 
-        // Quiz 1: Programming Basics (existing)
-        Quiz programmingQuiz = Quiz.builder()
-                .title("Programming Basics")
-                .description("Test your knowledge of basic programming concepts.")
-                .category(programming).difficulty("EASY")
-                .timeLimitMinutes(10).passingScorePct(60.0)
-                .maxAttempts(3).isRandomized(true).isPublished(true).isActive(true)
-                .totalQuestions(2).totalPoints(20)
-                .createdBy(superUser).build();
-        quizRepository.save(programmingQuiz);
-        quizQuestionRepository.saveAll(List.of(
-                QuizQuestion.builder().quiz(programmingQuiz).questionId(questionMap.get("What is the correct way to declare a variable in Java?").getId()).sortOrder(1).build(),
-                QuizQuestion.builder().quiz(programmingQuiz).questionId(questionMap.get("Which of these is not an OOP principle?").getId()).sortOrder(2).build()
-        ));
+        List<QuizDef> quizDefs = List.of(
+                new QuizDef("Programming Basics", "Test your knowledge of basic programming concepts.",
+                        programming, "EASY", 10, 60.0, 3, true, true, true, 2, 20,
+                        List.of(
+                                new QRef("What is the correct way to declare a variable in Java?", 1),
+                                new QRef("Which of these is not an OOP principle?", 2)
+                        )),
+                new QuizDef("Science Fundamentals", "Explore basic concepts in physics, chemistry, and biology.",
+                        science, "EASY", 10, 60.0, 3, true, true, true, 3, 30,
+                        List.of(
+                                new QRef("What is the chemical symbol for water?", 1),
+                                new QRef("What planet is known as the Red Planet?", 2),
+                                new QRef("What gas do plants primarily absorb from the atmosphere?", 3)
+                        )),
+                new QuizDef("Math Challenge", "Test your mathematics skills with these problems.",
+                        mathematics, "EASY", 10, 60.0, 3, true, true, true, 2, 20,
+                        List.of(
+                                new QRef("What is the value of Pi (\u03c0) to 2 decimal places?", 1),
+                                new QRef("What is the square root of 144?", 2)
+                        )),
+                new QuizDef("General Knowledge Quiz", "How well do you know the world around you?",
+                        generalKnowledge, "MEDIUM", 10, 60.0, 3, true, true, true, 3, 30,
+                        List.of(
+                                new QRef("Which country has the largest population?", 1),
+                                new QRef("What is the capital of Japan?", 2),
+                                new QRef("Who wrote Romeo and Juliet?", 3)
+                        )),
+                new QuizDef("Programming Mastery", "Advanced programming concepts for experienced developers.",
+                        programming, "HARD", 15, 70.0, 2, false, true, true, 3, 45,
+                        List.of(
+                                new QRef("What is the time complexity of binary search?", 1),
+                                new QRef("Which design pattern ensures a class has only one instance?", 2),
+                                new QRef("Which of these is not an OOP principle?", 3)
+                        ))
+        );
 
-        // Quiz 2: Science Fundamentals
-        Quiz scienceQuiz = Quiz.builder()
-                .title("Science Fundamentals")
-                .description("Explore basic concepts in physics, chemistry, and biology.")
-                .category(science).difficulty("EASY")
-                .timeLimitMinutes(10).passingScorePct(60.0)
-                .maxAttempts(3).isRandomized(true).isPublished(true).isActive(true)
-                .totalQuestions(3).totalPoints(30)
-                .createdBy(superUser).build();
-        quizRepository.save(scienceQuiz);
-        quizQuestionRepository.saveAll(List.of(
-                QuizQuestion.builder().quiz(scienceQuiz).questionId(questionMap.get("What is the chemical symbol for water?").getId()).sortOrder(1).build(),
-                QuizQuestion.builder().quiz(scienceQuiz).questionId(questionMap.get("What planet is known as the Red Planet?").getId()).sortOrder(2).build(),
-                QuizQuestion.builder().quiz(scienceQuiz).questionId(questionMap.get("What gas do plants primarily absorb from the atmosphere?").getId()).sortOrder(3).build()
-        ));
+        int created = 0;
+        for (QuizDef def : quizDefs) {
+            if (!quizRepository.findByTitle(def.title()).isEmpty()) continue;
+            Quiz quiz = quizRepository.save(Quiz.builder()
+                    .title(def.title()).description(def.description())
+                    .category(def.category()).difficulty(def.difficulty())
+                    .timeLimitMinutes(def.timeLimitMinutes()).passingScorePct(def.passingScorePct())
+                    .maxAttempts(def.maxAttempts()).isRandomized(def.isRandomized())
+                    .isPublished(def.isPublished()).isActive(def.isActive())
+                    .totalQuestions(def.totalQuestions()).totalPoints(def.totalPoints())
+                    .createdBy(superUser).build());
+            List<QuizQuestion> qqs = new ArrayList<>();
+            for (QRef ref : def.questions()) {
+                Question q = questionMap.get(ref.title());
+                if (q != null) {
+                    qqs.add(QuizQuestion.builder().quiz(quiz).questionId(q.getId()).sortOrder(ref.sortOrder()).build());
+                }
+            }
+            quizQuestionRepository.saveAll(qqs);
+            created++;
+        }
 
-        // Quiz 3: Math Challenge
-        Quiz mathQuiz = Quiz.builder()
-                .title("Math Challenge")
-                .description("Test your mathematics skills with these problems.")
-                .category(mathematics).difficulty("EASY")
-                .timeLimitMinutes(10).passingScorePct(60.0)
-                .maxAttempts(3).isRandomized(true).isPublished(true).isActive(true)
-                .totalQuestions(2).totalPoints(20)
-                .createdBy(superUser).build();
-        quizRepository.save(mathQuiz);
-        quizQuestionRepository.saveAll(List.of(
-                QuizQuestion.builder().quiz(mathQuiz).questionId(questionMap.get("What is the value of Pi (\u03c0) to 2 decimal places?").getId()).sortOrder(1).build(),
-                QuizQuestion.builder().quiz(mathQuiz).questionId(questionMap.get("What is the square root of 144?").getId()).sortOrder(2).build()
-        ));
-
-        // Quiz 4: General Knowledge Quiz
-        Quiz gkQuiz = Quiz.builder()
-                .title("General Knowledge Quiz")
-                .description("How well do you know the world around you?")
-                .category(generalKnowledge).difficulty("MEDIUM")
-                .timeLimitMinutes(10).passingScorePct(60.0)
-                .maxAttempts(3).isRandomized(true).isPublished(true).isActive(true)
-                .totalQuestions(3).totalPoints(30)
-                .createdBy(superUser).build();
-        quizRepository.save(gkQuiz);
-        quizQuestionRepository.saveAll(List.of(
-                QuizQuestion.builder().quiz(gkQuiz).questionId(questionMap.get("Which country has the largest population?").getId()).sortOrder(1).build(),
-                QuizQuestion.builder().quiz(gkQuiz).questionId(questionMap.get("What is the capital of Japan?").getId()).sortOrder(2).build(),
-                QuizQuestion.builder().quiz(gkQuiz).questionId(questionMap.get("Who wrote Romeo and Juliet?").getId()).sortOrder(3).build()
-        ));
-
-        // Quiz 5: Programming Mastery (hard)
-        Quiz masteryQuiz = Quiz.builder()
-                .title("Programming Mastery")
-                .description("Advanced programming concepts for experienced developers.")
-                .category(programming).difficulty("HARD")
-                .timeLimitMinutes(15).passingScorePct(70.0)
-                .maxAttempts(2).isRandomized(false).isPublished(true).isActive(true)
-                .totalQuestions(3).totalPoints(45)
-                .createdBy(superUser).build();
-        quizRepository.save(masteryQuiz);
-        quizQuestionRepository.saveAll(List.of(
-                QuizQuestion.builder().quiz(masteryQuiz).questionId(questionMap.get("What is the time complexity of binary search?").getId()).sortOrder(1).build(),
-                QuizQuestion.builder().quiz(masteryQuiz).questionId(questionMap.get("Which design pattern ensures a class has only one instance?").getId()).sortOrder(2).build(),
-                QuizQuestion.builder().quiz(masteryQuiz).questionId(questionMap.get("Which of these is not an OOP principle?").getId()).sortOrder(3).build()
-        ));
-
-        log.info("Created 5 quizzes with questions.");
+        if (created > 0) {
+            log.info("Created {} new quizzes with questions.", created);
+        }
     }
+
+    private record QuizDef(String title, String description, Category category, String difficulty,
+                            int timeLimitMinutes, double passingScorePct, int maxAttempts,
+                            boolean isRandomized, boolean isPublished, boolean isActive,
+                            int totalQuestions, int totalPoints, List<QRef> questions) {}
+    private record QRef(String title, int sortOrder) {}
 
     private void seedQuizAttempts(Map<String, User> userMap) {
         if (quizAttemptRepository.count() > 0) return;
         log.info("Seeding quiz attempts...");
 
-        Quiz programmingQuiz = quizRepository.findByTitle("Programming Basics").orElse(null);
-        Quiz scienceQuiz = quizRepository.findByTitle("Science Fundamentals").orElse(null);
+        Quiz programmingQuiz = quizRepository.findByTitle("Programming Basics").stream().findFirst().orElse(null);
+        Quiz scienceQuiz = quizRepository.findByTitle("Science Fundamentals").stream().findFirst().orElse(null);
         if (programmingQuiz == null || scienceQuiz == null) return;
 
         User superUser = userMap.get("superadmin");
         User player1 = userMap.get("john_doe");
+        if (superUser == null || player1 == null) return;
+
         Instant now = Instant.now();
 
         QuizAttempt attempt1 = QuizAttempt.builder()
@@ -663,9 +651,10 @@ public class DataInitializer implements CommandLineRunner {
 
         User superUser = userMap.get("superadmin");
         User player1 = userMap.get("john_doe");
+        if (superUser == null || player1 == null) return;
         Instant now = Instant.now();
 
-        Contest contest = Contest.builder()
+        Contest contest = contestRepository.save(Contest.builder()
                 .title("Weekend Quiz Championship")
                 .description("Compete with other players in a weekend-long quiz challenge!")
                 .contestType("TIMED")
@@ -676,8 +665,7 @@ public class DataInitializer implements CommandLineRunner {
                 .isActive(true)
                 .maxParticipants(50)
                 .createdBy(superUser.getId())
-                .build();
-        contestRepository.save(contest);
+                .build());
 
         contestParticipantRepository.saveAll(List.of(
                 ContestParticipant.builder().contestId(contest.getId()).userId(superUser.getId()).build(),
@@ -695,11 +683,17 @@ public class DataInitializer implements CommandLineRunner {
         User player1 = userMap.get("john_doe");
         User moderator = userMap.get("moderator");
 
-        friendshipRepository.saveAll(List.of(
-                Friendship.builder().requesterId(superUser.getId()).addresseeId(player1.getId()).status("ACCEPTED").build(),
-                Friendship.builder().requesterId(player1.getId()).addresseeId(superUser.getId()).status("ACCEPTED").build(),
-                Friendship.builder().requesterId(superUser.getId()).addresseeId(moderator.getId()).status("ACCEPTED").build()
-        ));
-        log.info("Created 3 friendships.");
+        List<Friendship> friendships = new ArrayList<>();
+        if (superUser != null && player1 != null) {
+            friendships.add(Friendship.builder().requesterId(superUser.getId()).addresseeId(player1.getId()).status("ACCEPTED").build());
+            friendships.add(Friendship.builder().requesterId(player1.getId()).addresseeId(superUser.getId()).status("ACCEPTED").build());
+        }
+        if (superUser != null && moderator != null) {
+            friendships.add(Friendship.builder().requesterId(superUser.getId()).addresseeId(moderator.getId()).status("ACCEPTED").build());
+        }
+        if (!friendships.isEmpty()) {
+            friendshipRepository.saveAll(friendships);
+        }
+        log.info("Created {} friendships.", friendships.size());
     }
 }
